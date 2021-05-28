@@ -8,7 +8,6 @@ services :
     container_name: gitlab-web
     hostname: gitlab
     ports:
-      #- '8888:80'
       - '20:20'
     networks:
       - "chimera"

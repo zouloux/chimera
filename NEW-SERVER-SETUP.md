@@ -9,12 +9,19 @@ Tested on Ubuntu 20.04 on a VPS configured with :
 
 ### Instructions
 
-#### Prepare OS
+#### Prepare Server
 
 1. Do a clean installation of Ubuntu
-2. Connect through SSH
+2. Connect through SSH : `ssh root@SERVER_IP`
 3. Add your public SSH key to `~/.ssh/authorized_keys` to avoid password logins
-4. Optionally, change default SSH port to improve security
+4. Change default SSH port to improve security and let Gitlab on port 22
+   ( [more info](https://www.cyberciti.biz/faq/howto-change-ssh-port-on-linux-or-unix-server/) ):
+- `sudo vi /etc/ssh/sshd_config` and replace `#Port 22` by `Port 2002`.
+You can choose any other port higher than `2000` if needed.
+5. Allow new SSH port on firewall : `sudo ufw allow 2002/tcp`
+6. Allow port on your VPS control panel also.
+5. Restart server with `reboot` and check SSH reconnect with port after some 
+seconds : `ssh -p root@SERVER_IP`
 
 #### Prepare DNS
 
@@ -42,9 +49,37 @@ Can also be something like `*.chimera.domain-name.com A SERVER_IP`
 - `sudo curl -L "https://github.com/docker/compose/releases/download/1.27.4/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose`
 - `sudo chmod +x /usr/local/bin/docker-compose`
 
+4. Optionally but highly advised, update vim
+- `sudo add-apt-repository ppa:jonathonf/vim`
+- `sudo apt update`
+- `sudo apt install vim`
+
 4. Optionally, install zsh and ohmyzsh
 - `sudo apt install zsh`
 - `sh -c "$(curl -fsSL https://raw.github.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"`
+
+#### Install cerbot certificate
+
+[More info](https://certbot.eff.org/lets-encrypt/ubuntufocal-nginx)
+
+1. Install snapd and dependencies
+- `sudo apt install snapd`
+- `sudo snap install core; sudo snap refresh core`
+
+2. Install certbot
+- `sudo snap install --classic certbot`
+- `sudo ln -s /snap/bin/certbot /usr/bin/certbot`
+
+3. Create root domain name certificate
+ ( [more info](https://marcincuber.medium.com/lets-encrypt-generating-wildcard-ssl-certificate-using-certbot-ae1c9484c101) )
+Proposed method, can be any other certificate installation method or challenge.
+Replace `YOUR_EMAIL`, `DOMAIN_NAME` and follow instructions.
+```certbot certonly --manual \
+  --preferred-challenges=dns \
+  --email YOUR_EMAIL \
+  --server https://acme-v02.api.letsencrypt.org/directory \
+  --agree-tos \
+  -d "*.DOMAIN_NAME"```
 
 #### Install chimera server
 
