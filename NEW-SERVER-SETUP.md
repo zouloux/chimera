@@ -20,10 +20,6 @@ Tested on Ubuntu 20.04 on a VPS configured with :
 2. Connect through SSH
 3. Add your public SSH key to `~/.ssh/authorized_keys` to avoid password logins
 4. Optionally, change default SSH port to improve security
-5. Optionally, refresh apt packages list `sudo apt update`
-6. Optionally, install zsh and ohmyzsh
-- `sudo apt install zsh`
-- `sh -c "$(curl -fsSL https://raw.github.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"`
 
 #### Install dependencies
 
@@ -41,6 +37,11 @@ Tested on Ubuntu 20.04 on a VPS configured with :
 - `sudo curl -L "https://github.com/docker/compose/releases/download/1.27.4/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose`
 - `sudo chmod +x /usr/local/bin/docker-compose`
 
+4. Optionally, install zsh and ohmyzsh
+- `sudo apt install zsh`
+- `sh -c "$(curl -fsSL https://raw.github.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"`
+
 #### Install chimera server
 
-
+- `git clone https://github.com/zouloux/chimera.git chimera-trunk`
+- `ln -s chimera-trunk/server chimera`

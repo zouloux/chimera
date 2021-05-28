@@ -1,0 +1,6 @@
+
+
+/core/gitlab/data/
+/core/nginx/data/logs/
+/core/nginx/data/config/virtual-hosts/chimera.conf
+.env
