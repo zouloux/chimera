@@ -1,9 +1,4 @@
-
-
-
-
 # New server setup
-
 
 ### Requirements
 
@@ -20,6 +15,16 @@ Tested on Ubuntu 20.04 on a VPS configured with :
 2. Connect through SSH
 3. Add your public SSH key to `~/.ssh/authorized_keys` to avoid password logins
 4. Optionally, change default SSH port to improve security
+
+#### Prepare DNS
+
+Configure DNS with your domain name register to point any sub-domain to an your
+chimera server's IP address.
+DNS be configured like `*.domain-name.com A SERVER_IP` if you want to have
+`domain-name.com` pointing to a website but any sub-domain pointing to your
+Chimera server. Anyway, you must redirect all sub-domain of any domain
+(or sub-domain) to server IP.
+Can also be something like `*.chimera.domain-name.com A SERVER_IP`
 
 #### Install dependencies
 
@@ -52,10 +57,6 @@ Tested on Ubuntu 20.04 on a VPS configured with :
 - Create dot env : `touch .env`
 - Edit it with vi or any editor : `vi .env` 
 - Specify Chimera root domain name.
-  Root domain name is DNS pointing to your server's IP. 
-  DNS can also be configured like `*.domain-name.com A IP` if you want to have
-  `domain-name.com` pointing to a website but any sub-domain pointing to your
-  Chimera server.
 - Ex : `CHIMERA_HOST=chimera.domain-name.com` or `CHIMERA_HOST=domain-name.com`
 
 3. Configure nginx host
@@ -70,7 +71,13 @@ Tested on Ubuntu 20.04 on a VPS configured with :
 4. Create chimera private network
 - `docker network create chimera`
 
-5. Start core servers as detached services
+5. Start Nginx server as detached service
 - `cd ~/chimera/core/nginx`
+- `docker-compose build`
+- `docker-compose up -d`
+- Now any sub-domain from your Root DNS should respond `502 Bad Gateway`
+
+6. Start gitlab server as detached service
+- `cd ~/chimera/core/gitlab`
 - `docker-compose build`
 - `docker-compose up -d`

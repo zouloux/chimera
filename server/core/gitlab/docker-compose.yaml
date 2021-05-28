@@ -8,7 +8,7 @@ services :
     container_name: gitlab-web
     hostname: gitlab
     ports:
-      - '8888:80'
+      #- '8888:80'
       - '20:20'
     networks:
       - "chimera"
@@ -21,7 +21,7 @@ services :
     environment:
       TZ: Europe/Paris
       GITLAB_OMNIBUS_CONFIG: |
-        external_url 'http://gitlab.${CHIMERA_HOST}:8080'
+        external_url 'https://gitlab.${CHIMERA_HOST}'
         gitlab_rails['initial_root_password'] = "rootpassword"
 
   gitlab-runner :
