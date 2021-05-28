@@ -43,5 +43,34 @@ Tested on Ubuntu 20.04 on a VPS configured with :
 
 #### Install chimera server
 
+1. Pull chimera sources from github
 - `git clone https://github.com/zouloux/chimera.git chimera-trunk`
 - `ln -s chimera-trunk/server chimera`
+
+2. Configure gitlab host
+- Go to Gitlab folder : `cd ~/chimera/core/gitlab/`
+- Create dot env : `touch .env`
+- Edit it with vi or any editor : `vi .env` 
+- Specify Chimera root domain name.
+  Root domain name is DNS pointing to your server's IP. 
+  DNS can also be configured like `*.domain-name.com A IP` if you want to have
+  `domain-name.com` pointing to a website but any sub-domain pointing to your
+  Chimera server.
+- Ex : `CHIMERA_HOST=chimera.domain-name.com` or `CHIMERA_HOST=domain-name.com`
+
+3. Configure nginx host
+- Go to Ngins virtual-hosts config folder :
+  `cd ~/chimera/core/nginx/data/config/virtual-hosts`
+- Copy template `cp chimera.conf.template chimera.conf`
+- Edit config file with vi or any editor : `vi chimera.conf`
+- Update line `~^(?<service>.+)\.sub-domain\.domain\-name\.com$;` and replace
+  with your Chimera root domain name, with dot escaped with `\`
+- Ex : `~^(?<service>.+)\.domain\-name\.com$;`
+
+4. Create chimera private network
+- `docker network create chimera`
+
+5. Start core servers as detached services
+- `cd ~/chimera/core/nginx`
+- `docker-compose build`
+- `docker-compose up -d`
