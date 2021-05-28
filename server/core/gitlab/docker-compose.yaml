@@ -1,0 +1,40 @@
+version: "3.7"
+
+services :
+
+  gitlab-web:
+    image: 'gitlab/gitlab-ce:latest'
+    restart: always
+    container_name: gitlab-web
+    hostname: gitlab
+    ports:
+      - '8888:80'
+      - '20:20'
+    networks:
+      - "chimera"
+    volumes:
+      - './data/backups:/var/opt/gitlab/backups'
+      - './data/data:/var/opt/gitlab'
+      - './data/web-config:/etc/gitlab'
+      - './data/logs:/var/log/gitlab'
+
+    environment:
+      TZ: Europe/Paris
+      GITLAB_OMNIBUS_CONFIG: |
+        external_url 'http://gitlab.${CHIMERA_HOST}:8080'
+        gitlab_rails['initial_root_password'] = "rootpassword"
+
+  gitlab-runner :
+    image: 'gitlab/gitlab-runner:alpine'
+    restart: on-failure
+    container_name: gitlab-runner
+    hostname: gitlab-runner
+    networks:
+      - "chimera"
+    volumes :
+      - './data/runner-config:/etc/gitlab-runner'
+      - '/var/run/docker.sock:/var/run/docker.sock'
+
+networks:
+  chimera:
+    external: true
