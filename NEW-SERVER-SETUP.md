@@ -74,18 +74,19 @@ Can also be something like `*.chimera.domain-name.com A SERVER_IP`
  ( [more info](https://marcincuber.medium.com/lets-encrypt-generating-wildcard-ssl-certificate-using-certbot-ae1c9484c101) )
 Proposed method, can be any other certificate installation method or challenge.
 Replace `YOUR_EMAIL`, `DOMAIN_NAME` and follow instructions.
-```certbot certonly --manual \
+`certbot certonly --manual \
   --preferred-challenges=dns \
   --email YOUR_EMAIL \
   --server https://acme-v02.api.letsencrypt.org/directory \
   --agree-tos \
-  -d "*.DOMAIN_NAME"```
+  -d "*.DOMAIN_NAME"`
 
 #### Install chimera server
 
 1. Pull chimera sources from github
 - `git clone https://github.com/zouloux/chimera.git chimera-trunk`
 - `ln -s chimera-trunk/server chimera`
+We can keep `chimera-trunk` to be able to pull `Chimera` updates.
 
 2. Configure gitlab host
 - Go to Gitlab folder : `cd ~/chimera/core/gitlab/`
@@ -101,6 +102,9 @@ Replace `YOUR_EMAIL`, `DOMAIN_NAME` and follow instructions.
 - Edit config file with vi or any editor : `vi chimera.conf`
 - Update line `~^(?<service>.+)\.sub-domain\.domain\-name\.com$;` and replace
   with your Chimera root domain name, with dot escaped with `\`
+- Update `DOMAIN_NAME` on line 27 and 28 with generated domain ID from certbot.
+  If not sure, do `ls -la /etc/letsencrypt/live/`, sometimes Certbot adds an
+  extension to the folder name.
 - Ex : `~^(?<service>.+)\.domain\-name\.com$;`
 
 4. Create chimera private network
@@ -110,7 +114,12 @@ Replace `YOUR_EMAIL`, `DOMAIN_NAME` and follow instructions.
 - `cd ~/chimera/core/nginx`
 - `docker-compose build`
 - `docker-compose up -d`
-- Now any sub-domain from your Root DNS should respond `502 Bad Gateway`
+
+Now any sub-domain from your Root DNS should respond `502 Bad Gateway`.
+Also, https should work. If http does not respond, double check DNS parameters.
+If you can't connect to SSH with domain name, it may come from Nginx. To check
+Nginx, stop it with docker-compose and try `docker-compose up` without `-d` to 
+see if it crashes, and if you have any useful log.
 
 6. Start gitlab server as detached service
 - `cd ~/chimera/core/gitlab`
