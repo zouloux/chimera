@@ -110,14 +110,16 @@ GITLAB_VERSION=13.12.1-ce.0
 3. Configure nginx host
 - Go to Ngins virtual-hosts config folder :
   `cd ~/chimera/core/nginx/data/config/virtual-hosts`
-- Copy template `cp chimera.conf.template chimera.conf`
-- Edit config file with vi or any editor : `vi chimera.conf`
+- Copy templates `cp chimera.conf.template chimera.conf` and `cp default.conf.template default.conf`
+- Edit chimera host file with vi or any editor : `vi chimera.conf`
 - Update line `~^(?<service>.+)\.sub-domain\.domain\-name\.com$;` and replace
   with your Chimera root domain name, with dot escaped with `\`
-- Update `DOMAIN_NAME` on line 27 and 28 with generated domain ID from certbot.
+- Ex : `~^(?<service>.+)\.domain\-name\.com$;`
+- Update `DOMAIN_NAME` on line 28 and 29 with generated domain ID from certbot.
   If not sure, do `ls -la /etc/letsencrypt/live/`, sometimes Certbot adds an
   extension to the folder name.
-- Ex : `~^(?<service>.+)\.domain\-name\.com$;`
+- Edit default host file with vi or any editor : `vi default.conf`
+- Also replace `DOMAIN_NAME`
 
 4. Create chimera private network
 - `docker network create chimera`
