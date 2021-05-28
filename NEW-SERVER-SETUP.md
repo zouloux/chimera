@@ -49,12 +49,17 @@ Can also be something like `*.chimera.domain-name.com A SERVER_IP`
 - `sudo curl -L "https://github.com/docker/compose/releases/download/1.27.4/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose`
 - `sudo chmod +x /usr/local/bin/docker-compose`
 
-4. Optionally but highly advised, update vim
+4. Install n (node version manager) and node
+- `sudo curl -o /usr/local/bin/n https://raw.githubusercontent.com/visionmedia/n/master/bin/n`
+- `sudo chmod +x /usr/local/bin/n`
+- Install node : `sudo n latest`
+
+5. Highly advised, update vim
 - `sudo add-apt-repository ppa:jonathonf/vim`
 - `sudo apt update`
 - `sudo apt install vim`
 
-4. Optionally, install zsh and ohmyzsh
+6. Optionally, install zsh and ohmyzsh
 - `sudo apt install zsh`
 - `sh -c "$(curl -fsSL https://raw.github.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"`
 
@@ -90,10 +95,17 @@ We can keep `chimera-trunk` to be able to pull `Chimera` updates.
 
 2. Configure gitlab host
 - Go to Gitlab folder : `cd ~/chimera/core/gitlab/`
-- Create dot env : `touch .env`
-- Edit it with vi or any editor : `vi .env` 
-- Specify Chimera root domain name.
-- Ex : `CHIMERA_HOST=chimera.domain-name.com` or `CHIMERA_HOST=domain-name.com`
+- Copy template `cp .env.default .env`
+- Edit `.env` with vi or any editor : `vi .env` 
+  - Set `DOMAIN_NAME` as Chimera root domain name.
+  - Fix `GITLAB_VERSION` to a the latest current gitlab version to avoid unwanted upgrades.
+    ( [know more](https://hub.docker.com/r/gitlab/gitlab-ce/tags?page=1&ordering=last_updated) )
+  - Set SMTP parameters to allow gitlab to send e-mails.
+    
+Ex : `
+DOMAIN_NAME=chimera.domain-name.com
+GITLAB_VERSION=13.12.1-ce.0
+`
 
 3. Configure nginx host
 - Go to Ngins virtual-hosts config folder :
@@ -125,3 +137,8 @@ see if it crashes, and if you have any useful log.
 - `cd ~/chimera/core/gitlab`
 - `docker-compose build`
 - `docker-compose up -d`
+
+After some minutes, you should be able to connect to `https://gitlab.DOMAIN_NAME`.
+Insert quickly your master password (create a big one), then connect with user
+`root` and the password you just entered.
+You can follow instructions to configure gitlab on [this tutorual](https://www.howtoforge.com/how-to-install-gitlab-server-with-docker-on-ubuntu-1804/).
