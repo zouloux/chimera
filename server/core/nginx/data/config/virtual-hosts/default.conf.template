@@ -2,8 +2,15 @@
 # chance access to any other virtualhost.
 
 server {
+    # Listen http
 	listen 80 default_server;
 	listen [::]:80 default_server;
+
+    # Listen https with ssl
+	listen 443 ssl default_server;
+	listen [::]:443 ssl default_server;
+    ssl_certificate /etc/letsencrypt/live/DOMAIN_NAME/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/DOMAIN_NAME/privkey.pem;
 
 	# Everything is a 404
 	location / {
