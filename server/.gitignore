@@ -1,5 +1,6 @@
 
 /core/gitlab/data/
+!/core/gitlab/data/runn-erconfig
 /core/nginx/data/logs/
 /core/nginx/data/config/virtual-hosts/*.conf
 .env
