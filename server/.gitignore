@@ -1,6 +1,5 @@
 
 /core/gitlab/data/
 /core/nginx/data/logs/
-/core/nginx/data/config/virtual-hosts/chimera.conf
-/core/nginx/data/config/virtual-hosts/default.conf
+/core/nginx/data/config/virtual-hosts/*.conf
 .env

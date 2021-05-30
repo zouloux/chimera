@@ -20,7 +20,10 @@ services :
     environment:
       TZ: Europe/Paris
       GITLAB_OMNIBUS_CONFIG: |
-        external_url 'https://gitlab.${DOMAIN_NAME}:443'
+        external_url 'https://gitlab.${DOMAIN_NAME}'
+        nginx['listen_port'] = 80
+        nginx['listen_https'] = false
+        nginx['redirect_http_to_https'] = true
         gitlab_rails['smtp_enable'] = true
         gitlab_rails['smtp_address'] = "${GITLAB_SMTP_ADDRESS}"
         gitlab_rails['smtp_port'] = ${GITLAB_SMTP_PORT}

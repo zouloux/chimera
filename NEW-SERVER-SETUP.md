@@ -118,8 +118,6 @@ GITLAB_VERSION=13.12.1-ce.0
 - Update `DOMAIN_NAME` on line 28 and 29 with generated domain ID from certbot.
   If not sure, do `ls -la /etc/letsencrypt/live/`, sometimes Certbot adds an
   extension to the folder name.
-- Edit default host file with vi or any editor : `vi default.conf`
-- Also replace `DOMAIN_NAME`
 
 4. Create chimera private network
 - `docker network create chimera`
@@ -144,3 +142,9 @@ After some minutes, you should be able to connect to `https://gitlab.DOMAIN_NAME
 Insert quickly your master password (create a big one), then connect with user
 `root` and the password you just entered.
 You can follow instructions to configure gitlab on [this tutorual](https://www.howtoforge.com/how-to-install-gitlab-server-with-docker-on-ubuntu-1804/).
+
+7. Setup gitlab token
+
+Go to gitlab then `/admin/runners`
+TODO -> Register
+TODO -> Check if build works
