@@ -1,7 +1,6 @@
 concurrent = 3
 check_interval = 0
 
-
 [session_server]
   session_timeout = 3600
 
