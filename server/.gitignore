@@ -1,5 +1,5 @@
 
-/core/gitlab/data/
+/core/gitlab/data/*/
 !/core/gitlab/data/runner-config/
 /core/nginx/data/logs/
 /core/nginx/data/config/virtual-hosts/*.conf
