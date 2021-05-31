@@ -151,5 +151,6 @@ You can follow instructions to configure gitlab on [this tutorual](https://www.h
 - Copy Gitlab runner config template : 
   - `cd ~/chimera/core/gitlab/data/runner-config`
   - `cp config.toml.template config.toml`
+- Replace `GITLAB_URL` line 9, no need for `https`.
 - Replace `RUNNER_TOKEN` line 10 with previously copied token.
 - Configure this file for your needs following [this](https://docs.gitlab.com/runner/configuration/advanced-configuration.html)
