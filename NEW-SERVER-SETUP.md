@@ -107,6 +107,9 @@ DOMAIN_NAME=chimera.domain-name.com
 GITLAB_VERSION=13.12.1-ce.0
 `
 
+FIY, Gitlab is configured to run behind an SSL enabled Nginx proxy.
+([more info](https://www.itsfullofstars.de/2019/06/gitlab-behind-a-reverse-proxy/))
+
 3. Configure nginx host
 - Go to Ngins virtual-hosts config folder :
   `cd ~/chimera/core/nginx/data/config/virtual-hosts`
@@ -144,7 +147,9 @@ Insert quickly your master password (create a big one), then connect with user
 You can follow instructions to configure gitlab on [this tutorual](https://www.howtoforge.com/how-to-install-gitlab-server-with-docker-on-ubuntu-1804/).
 
 7. Setup gitlab token
-
-Go to gitlab then `/admin/runners`
-TODO -> Register
-TODO -> Check if build works
+- Connect to your freshly installed gitlab, then go to `/admin/runners`. Copy the **registration token**.
+- Copy Gitlab runner config template : 
+  - `cd ~/chimera/core/gitlab/data/runner-config`
+  - `cp config.toml.template config.toml`
+- Replace `RUNNER_TOKEN` line 10 with previously copied token.
+- Configure this file for your needs following [this](https://docs.gitlab.com/runner/configuration/advanced-configuration.html)
