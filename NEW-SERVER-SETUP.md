@@ -171,3 +171,16 @@ You can follow instructions to configure gitlab on [this tutorual](https://www.h
   - `CHIMERA_HOST` to `root@172.17.0.1:2002` if Gitlab is installed on same server
     than Chimera. Otherwise, specify SSH target to connect from outside.
 - Add public key to `~/.ssh/authorized_keys` on Chimera server
+
+#### Configure maintenance cron
+
+The maintenance cron will remove all unused docker images and containers. It will
+also renew certbot SSL certificate if needed.
+
+- Create a log directory into home folder : `mkdir ~/logs`.
+- Go to crontab with `crontab -e`.
+- Call maintenance script once a week and save to a log file.
+  - Ex : `* 3 * * 0 /root/chimera/maintenance-cron.sh > /root/logs/maintenance-cron.log`
+  - This example is for every sunday on 3am.
+  - Note that your home directory can change depending on installation.
+  - Always test script (run `/root/chimera/maintenance-cron.sh > /root/logs/maintenance-cron.log` and update crontab if something goes wrong.)
