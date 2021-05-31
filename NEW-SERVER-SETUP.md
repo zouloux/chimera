@@ -151,6 +151,13 @@ You can follow instructions to configure gitlab on [this tutorual](https://www.h
 - Copy Gitlab runner config template : 
   - `cd ~/chimera/core/gitlab/data/runner-config`
   - `cp config.toml.template config.toml`
-- Replace `GITLAB_URL` line 9, no need for `https`.
-- Replace `RUNNER_TOKEN` line 10 with previously copied token.
-- Configure this file for your needs following [this](https://docs.gitlab.com/runner/configuration/advanced-configuration.html)
+- Connect to Gitlab runner's shell : `cd ~ && ./docker-open-shell.sh core_gitlab-runner`
+- Register a new runner : `gitlab-runner register` with parameters :
+  - http://gitlab.chimera/
+  - Enter registration token
+  - Select Docker
+  - Specify default docker image, can be `misterio92/ci-php-node`
+  - Validate and exit shell with ctrl+c
+- Configure generated file for your needs following [this](https://docs.gitlab.com/runner/configuration/advanced-configuration.html)
+- You can restart everything to be sure with `cd ~/chimera/core/gitlab && docker-compose down && docker-compose up -d`
+- After restart, Gitlab's `/admin/runners` should show registered runner.
