@@ -2,10 +2,10 @@ version: "3.7"
 
 services :
   
-  nginx :
+  core_nginx :
     build : nginx-image
     restart: on-failure
-    container_name: nginx
+    container_name: core_nginx
     hostname: nginx
     ports :
       - '80:80'

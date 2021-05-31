@@ -2,10 +2,10 @@ version: "3.7"
 
 services :
 
-  gitlab-web:
+  core_gitlab-web:
     image: 'gitlab/gitlab-ce:${GITLAB_IMAGE_VERSION:-latest}'
     restart: always
-    container_name: gitlab-web
+    container_name: core_gitlab-web
     hostname: gitlab.chimera
     ports:
       - '20:20'
@@ -36,11 +36,10 @@ services :
         gitlab_rails['smtp_tls'] = ${GITLAB_SMTP_TLS}
         gitlab_rails['smtp_openssl_verify_mode'] = '${GITLAB_SMTP_OPENSSL_VERIFY_MODE}'
 
-  gitlab-runner :
+  core_gitlab-runner :
     image: 'gitlab/gitlab-runner:alpine'
     restart: on-failure
-    container_name: gitlab-runner
-    hostname: gitlab-runner
+    container_name: core_gitlab-runner
     networks:
       - "chimera"
     volumes :
