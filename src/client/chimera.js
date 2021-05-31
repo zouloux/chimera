@@ -195,8 +195,9 @@ async function chimeraPush ( options )
 	// Split port from chimera host to a separated variable
 	let port
 	if ( options.host.indexOf(':') !== -1 ) {
-		port = options.host[1]
-		options.host = options.host[0]
+		const split = options.host.split(':')
+		options.host = split[0]
+		port = split[1]
 	}
 
 	const buildSSHCommand = ( sshCommand ) => `ssh ${port ? `-p ${port}` : ''} ${options.host} "${sshCommand}"`
