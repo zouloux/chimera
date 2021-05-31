@@ -98,13 +98,13 @@ We can keep `chimera-trunk` to be able to pull `Chimera` updates.
 - Copy template `cp .env.default .env`
 - Edit `.env` with vi or any editor : `vi .env` 
   - Set `DOMAIN_NAME` as Chimera root domain name.
-  - Fix `GITLAB_VERSION` to a the latest current gitlab version to avoid unwanted upgrades.
+  - Fix `GITLAB_IMAGE_VERSION` to a the latest current gitlab version to avoid unwanted upgrades.
     ( [know more](https://hub.docker.com/r/gitlab/gitlab-ce/tags?page=1&ordering=last_updated) )
   - Set SMTP parameters to allow gitlab to send e-mails.
     
 Ex : `
 DOMAIN_NAME=chimera.domain-name.com
-GITLAB_VERSION=13.12.1-ce.0
+GITLAB_IMAGE_VERSION=13.12.1-ce.0
 `
 
 FIY, Gitlab is configured to run behind an SSL enabled Nginx proxy.

@@ -3,7 +3,7 @@ version: "3.7"
 services :
 
   gitlab-web:
-    image: 'gitlab/gitlab-ce:${GITLAB_VERSION:-latest}'
+    image: 'gitlab/gitlab-ce:${GITLAB_IMAGE_VERSION:-latest}'
     restart: always
     container_name: gitlab-web
     hostname: gitlab.chimera
@@ -24,6 +24,7 @@ services :
         nginx['listen_port'] = 80
         nginx['listen_https'] = false
         nginx['redirect_http_to_https'] = true
+        nginx['client_max_body_size'] = "${NGINX_CLIENT_MAX_BODY_SIZE}"
         gitlab_rails['smtp_enable'] = true
         gitlab_rails['smtp_address'] = "${GITLAB_SMTP_ADDRESS}"
         gitlab_rails['smtp_port'] = ${GITLAB_SMTP_PORT}
@@ -31,9 +32,9 @@ services :
         gitlab_rails['smtp_password'] = "${GITLAB_SMTP_PASSWORD}"
         gitlab_rails['smtp_domain'] = "${GITLAB_SMTP_DOMAIN}"
         gitlab_rails['smtp_authentication'] = "${GITLAB_SMTP_AUTHENTICATION}"
-        gitlab_rails['smtp_enable_starttls_auto'] = ${GITLAB_SMTP_STARTTLS}
+        gitlab_rails['smtp_enable_starttls_auto'] = ${GITLAB_SMTP_STARTTLS_AUTO}
         gitlab_rails['smtp_tls'] = ${GITLAB_SMTP_TLS}
-        gitlab_rails['smtp_openssl_verify_mode'] = '${GITLAB_SMTP_VERIFY_MODE}'
+        gitlab_rails['smtp_openssl_verify_mode'] = '${GITLAB_SMTP_OPENSSL_VERIFY_MODE}'
 
   gitlab-runner :
     image: 'gitlab/gitlab-runner:alpine'
