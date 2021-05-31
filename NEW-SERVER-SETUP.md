@@ -168,6 +168,6 @@ You can follow instructions to configure gitlab on [this tutorual](https://www.h
 - Go to Gitlab's `/admin/application_settings/ci_cd` and add 3 variables :
   - `SSH_PRIVATE` and `SSH_PUBLIC` (generate a key for to identify gitlab, [more info](https://git-scm.com/book/en/v2/Git-on-the-Server-Generating-Your-SSH-Public-Key)).
     Remove comments from `SSH_PRIVATE`, it should only inclure the key body.
-  - `CHIMERA_HOST` to `root@localhost` or anything to connect to Chimera server
-    with SSH if Gitlab is on another host of Chimera for example.
+  - `CHIMERA_HOST` to `root@172.17.0.1:2002` if Gitlab is installed on same server
+    than Chimera. Otherwise, specify SSH target to connect from outside.
 - Add public key to `~/.ssh/authorized_keys` on Chimera server
