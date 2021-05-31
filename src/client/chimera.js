@@ -189,8 +189,8 @@ async function chimeraPush ( options )
 	const projectID = `projects/${options.project}/${options.branch}/`
 	const chimeraProjectPath = `${chimeraHome}${projectID}`
 
-	// Project host name for internal network
-	const hostName = `${options.branch}.${options.project}`
+	// Project prefix for internal network and container identifying
+	const projectPrefix = `${options.branch}.${options.project}`
 
 	// Split port from chimera host to a separated variable
 	let port
@@ -271,7 +271,7 @@ async function chimeraPush ( options )
 	// TODO -> Create symlinks persistent folders
 	const installLoader = printLoaderLine(`Install container`)
 	try {
-		await execAsync( buildSSHCommand(`cd ${chimeraHome}; ./chimera-project-install.sh ${projectID} ${hostName}`))
+		await execAsync( buildSSHCommand(`cd ${chimeraHome}; ./chimera-project-install.sh ${projectID} ${dockerComposeFilePath} ${projectPrefix}`))
 	}
 	catch (e) {
 		installLoader(`Cannot install container`, 'error')
@@ -291,7 +291,7 @@ async function chimeraPush ( options )
 	buildLoader(`Built container`)
 
 	// ---- START CONTAINER
-	const startedLoader = printLoaderLine(`Starting container ${hostName}`)
+	const startedLoader = printLoaderLine(`Starting container ${projectPrefix}`)
 	try {
 		await execAsync( buildSSHCommand(`cd ${chimeraHome}; ./chimera-project-start.sh ${projectID}`))
 	}
@@ -299,5 +299,5 @@ async function chimeraPush ( options )
 		startedLoader(`Cannot start container`, 'error')
 		fatalError( e )
 	}
-	startedLoader(`Started container ${hostName}`, 'success')
+	startedLoader(`Started container ${projectPrefix}`, 'success')
 }
