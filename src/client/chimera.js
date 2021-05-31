@@ -192,7 +192,14 @@ async function chimeraPush ( options )
 	// Project host name for internal network
 	const hostName = `${options.branch}.${options.project}`
 
-	const buildSSHCommand = ( sshCommand ) => `ssh ${options.host} "${sshCommand}"`
+	// Split port from chimera host to a separated variable
+	let port
+	if ( options.host.indexOf(':') !== -1 ) {
+		port = options.host[1]
+		options.host = options.host[0]
+	}
+
+	const buildSSHCommand = ( sshCommand ) => `ssh ${port ? `-p ${port}` : ''} ${options.host} "${sshCommand}"`
 
 	const buildSSHMkdirCommand = ( subDirPath ) => {
 		return buildSSHCommand(`mkdir -p ${chimeraProjectPath}${subDirPath}`)
@@ -209,6 +216,8 @@ async function chimeraPush ( options )
 		}
 		// FIXME : Publish .bin files ?
 		const command = [`rsync`, `-r -z -u -t`];
+		if ( port )
+			command.push(`-e 'ssh -p ${port}'`)
 		// command.push(`-v --dry-run`);
 		command.push(`${filePath} ${options.host}:${chimeraProjectPath}${root}`)
 		return [ filePath, buildSSHMkdirCommand(root), command.join(' ') ]
