@@ -190,7 +190,11 @@ async function chimeraPush ( options )
 	const chimeraProjectPath = `${chimeraHome}${projectID}`
 
 	// Project prefix for internal network and container identifying
-	const projectPrefix = `${options.project}_${options.branch}`
+	const projectPrefix = (
+		options.branch === 'master'
+		? options.project
+		: `${options.project}_${options.branch}`
+	)
 
 	// Split port from chimera host to a separated variable
 	let port

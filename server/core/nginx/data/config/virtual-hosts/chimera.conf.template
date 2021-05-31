@@ -2,7 +2,7 @@
 server
 {
     # Capture all sub-domains as service and inject service name as header
-    server_name ~^(?<service>)\.sub-domain\.domain\-name\.com$;
+    server_name ~^(?<service>.+)\.sub-domain\.domain\-name\.com$;
     add_header X-service "$service";
 
     #access_log "/var/log/nginx/$service-access.log";
