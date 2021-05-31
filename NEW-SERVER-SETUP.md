@@ -93,7 +93,9 @@ Replace `YOUR_EMAIL`, `DOMAIN_NAME` and follow instructions.
 - `ln -s chimera-trunk/server chimera`
 We can keep `chimera-trunk` to be able to pull `Chimera` updates.
 
-2. Configure gitlab host
+#### Configure Gitlab
+
+1. Configure gitlab host
 - Go to Gitlab folder : `cd ~/chimera/core/gitlab/`
 - Copy template `cp .env.default .env`
 - Edit `.env` with vi or any editor : `vi .env` 
@@ -110,7 +112,7 @@ GITLAB_IMAGE_VERSION=13.12.1-ce.0
 FIY, Gitlab is configured to run behind an SSL enabled Nginx proxy.
 ([more info](https://www.itsfullofstars.de/2019/06/gitlab-behind-a-reverse-proxy/))
 
-3. Configure nginx host
+2. Configure nginx host
 - Go to Ngins virtual-hosts config folder :
   `cd ~/chimera/core/nginx/data/config/virtual-hosts`
 - Copy templates `cp chimera.conf.template chimera.conf` and `cp default.conf.template default.conf`
@@ -122,10 +124,10 @@ FIY, Gitlab is configured to run behind an SSL enabled Nginx proxy.
   If not sure, do `ls -la /etc/letsencrypt/live/`, sometimes Certbot adds an
   extension to the folder name.
 
-4. Create chimera private network
+3. Create chimera private network
 - `docker network create chimera`
 
-5. Start Nginx server as detached service
+4. Start Nginx server as detached service
 - `cd ~/chimera/core/nginx`
 - `docker-compose build`
 - `docker-compose up -d`
@@ -136,7 +138,7 @@ If you can't connect to SSH with domain name, it may come from Nginx. To check
 Nginx, stop it with docker-compose and try `docker-compose up` without `-d` to 
 see if it crashes, and if you have any useful log.
 
-6. Start gitlab server as detached service
+5. Start gitlab server as detached service
 - `cd ~/chimera/core/gitlab`
 - `docker-compose build`
 - `docker-compose up -d`
@@ -146,7 +148,7 @@ Insert quickly your master password (create a big one), then connect with user
 `root` and the password you just entered.
 You can follow instructions to configure gitlab on [this tutorual](https://www.howtoforge.com/how-to-install-gitlab-server-with-docker-on-ubuntu-1804/).
 
-7. Setup gitlab token
+6. Setup gitlab token
 - Connect to your freshly installed gitlab, then go to `/admin/runners`. Copy the **registration token**.
 - Copy Gitlab runner config template : 
   - `cd ~/chimera/core/gitlab/data/runner-config`
@@ -161,3 +163,11 @@ You can follow instructions to configure gitlab on [this tutorual](https://www.h
 - Configure generated file for your needs following [this](https://docs.gitlab.com/runner/configuration/advanced-configuration.html)
 - You can restart everything to be sure with `cd ~/chimera/core/gitlab && docker-compose down && docker-compose up -d`
 - After restart, Gitlab's `/admin/runners` should show registered runner.
+
+7. Set global variables
+- Go to Gitlab's `/admin/application_settings/ci_cd` and add 3 variables :
+  - `SSH_PRIVATE` and `SSH_PUBLIC` (generate a key for to identify gitlab, [more info](https://git-scm.com/book/en/v2/Git-on-the-Server-Generating-Your-SSH-Public-Key)).
+    Remove comments from `SSH_PRIVATE`, it should only inclure the key body.
+  - `CHIMERA_HOST` to `root@localhost` or anything to connect to Chimera server
+    with SSH if Gitlab is on another host of Chimera for example.
+- Add public key to `~/.ssh/authorized_keys` on Chimera server

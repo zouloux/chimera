@@ -56,10 +56,11 @@ CLICommands.add('push', async (cliArguments, cliOptions, commandName) => {
 	if ( chimeraConfigFile.exists() ) {
 		chimeraConfigFile.load()
 		try {
-			options = chimeraConfigFile.json5()
+			const configOptions = chimeraConfigFile.json5()
 			// Remove options which are only for cli
-			delete options.branch
-			delete options.env
+			delete configOptions.branch
+			delete configOptions.env
+			options = { ...options, ...configOptions }
 		}
 		catch (e) {
 			console.error( e )
