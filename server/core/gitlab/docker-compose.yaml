@@ -4,7 +4,7 @@ services :
 
   core_gitlab-web:
     image: 'gitlab/gitlab-ce:${GITLAB_IMAGE_VERSION:-latest}'
-    restart: always
+    restart: unless-stopped
     container_name: core_gitlab-web
     hostname: gitlab.chimera
     ports:
@@ -38,7 +38,7 @@ services :
 
   core_gitlab-runner :
     image: 'gitlab/gitlab-runner:alpine'
-    restart: on-failure
+    restart: unless-stopped
     container_name: core_gitlab-runner
     networks:
       - "chimera"

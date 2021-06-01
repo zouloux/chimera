@@ -4,7 +4,7 @@ services :
   
   core_nginx :
     build : nginx-image
-    restart: on-failure
+    restart: always
     container_name: core_nginx
     hostname: nginx
     ports :

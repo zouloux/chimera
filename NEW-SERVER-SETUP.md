@@ -27,10 +27,10 @@ seconds : `ssh -p root@SERVER_IP`
 
 Configure DNS with your domain name register to point any sub-domain to an your
 chimera server's IP address.
-DNS be configured like `*.domain-name.com A SERVER_IP` if you want to have
+DNS can be configured like `*.domain-name.com A SERVER_IP` if you want to have
 `domain-name.com` pointing to a website but any sub-domain pointing to your
 Chimera server. Anyway, you must redirect all sub-domain of any domain
-(or sub-domain) to server IP.
+(or sub-domain) to server's IP.
 Can also be something like `*.chimera.domain-name.com A SERVER_IP`
 
 #### Install dependencies
