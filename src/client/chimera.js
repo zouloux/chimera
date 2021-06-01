@@ -2,6 +2,7 @@
 
 const { CLICommands, nicePrint, execAsync, printLoaderLine, setLoaderScope } = require('@solid-js/cli')
 const { File, FileFinder, Directory } = require('@solid-js/files')
+const { trailing } =require('@solid-js/core')
 const path = require('path')
 
 // ----------------------------------------------------------------------------- RESEARCH
@@ -48,7 +49,8 @@ CLICommands.add('push', async (cliArguments, cliOptions, commandName) => {
 
 	// Default options
 	let options = {
-		dockerFile: 'chimera-docker-compose.yaml'
+		dockerFile: 'chimera-docker-compose.yaml',
+		afterScripts: []
 	}
 
 	// Load options from .chimera json5 file
@@ -84,6 +86,17 @@ CLICommands.add('push', async (cliArguments, cliOptions, commandName) => {
 		)
 	if ( cliOptions.dockerFile )
 		options.dockerFile = cliOptions.dockerFile
+	if ( cliOptions.debug )
+		options.debug = true
+	if ( cliOptions.afterScript )
+		options.afterScripts = [
+			...options.afterScripts,
+			...(
+				Array.isArray( cliOptions.afterScript )
+				? cliOptions.afterScript
+				: [ cliOptions.afterScript ]
+			)
+		]
 
 	options.env = (
 		cliOptions.env.indexOf('.') === 0
@@ -204,34 +217,51 @@ async function chimeraPush ( options )
 		port = split[1]
 	}
 
-	const buildSSHCommand = ( sshCommand ) => `ssh ${port ? `-p ${port}` : ''} ${options.host} "${sshCommand}"`
+	const buildSSHCommand = ( sshCommand ) => `ssh ${port ? `-p ${port}` : ''} -o StrictHostKeyChecking=no ${options.host} "${sshCommand}"`
 
 	const buildSSHMkdirCommand = ( subDirPath ) => {
 		return buildSSHCommand(`mkdir -p ${chimeraProjectPath}${subDirPath}`)
 	}
 
 	const buildRsyncCommand = ( filePath ) => {
-		let root = ''
+		// Destination directory to be pre-created
+		let destination = ''
+
+		// If several files are sent, always start from root
 		if ( Array.isArray(filePath) )
 			filePath = filePath.join(' ')
-		else {
-			if ( FileFinder.list( filePath ).length === 0 )
-				return [ filePath ]
-			root = path.relative( process.cwd(), path.resolve(filePath, '../') )
-		}
+
+		// If file does not exists, skip it (register name but no command)
+		else if ( FileFinder.list( filePath ).length === 0 )
+			return [ filePath ]
+
+		// Only one file or directory
+		// Target parent directory to prepare and create before transfer
+		else
+			destination = path.relative( process.cwd(), path.resolve(filePath, '../') )
+
+		// Generate rsync command
 		// FIXME : Publish .bin files ?
-		const command = [`rsync`, `-r -z -u -t`];
-		if ( port )
-			command.push(`-e 'ssh -p ${port}'`)
+		// TODO : Add exclude option to config
+		const rsyncCommand = [`rsync`, `-r -z -u -t --delete --exclude '**/.DS_Store'`];
 		// command.push(`-v --dry-run`);
-		command.push(`${filePath} ${options.host}:${chimeraProjectPath}${root}`)
-		return [ filePath, buildSSHMkdirCommand(root), command.join(' ') ]
+
+		// Add port through SSH to command if we got a port
+		if ( port )
+			rsyncCommand.push(`-e 'ssh -p ${port}'`)
+
+		// Source file without trailing slash to avoid wrong destination
+		const source = trailing(filePath, false, '/')
+
+		// Generate 1 command to build destination parent, 1 command to rsync file
+		rsyncCommand.push(`${source} ${options.host}:${chimeraProjectPath}${destination}`)
+		return [ filePath, destination && buildSSHMkdirCommand(destination), rsyncCommand.join(' ') ]
 	}
 
 	const transferCommands = [
-		buildRsyncCommand(rootFiles ),
+		buildRsyncCommand( rootFiles ),
 		...imageFiles.map( buildRsyncCommand ),
-		...options.paths.map( buildRsyncCommand )
+		...options.paths.filter( v => v ).map( buildRsyncCommand )
 	]
 
 	function fatalError ( e = null, code = 1 ) {
@@ -255,6 +285,7 @@ async function chimeraPush ( options )
 	// ---- SEND FILES
 	for ( const transferBlock of transferCommands ) {
 		const name = transferBlock[0]
+		options.debug && console.log(transferBlock);
 		const transferLoader = printLoaderLine(`Sending ${name}`)
 		try {
 			if ( transferBlock.length === 1 )
@@ -293,6 +324,23 @@ async function chimeraPush ( options )
 		fatalError( e )
 	}
 	buildLoader(`Built container`)
+
+	// ---- AFTER SCRIPTS
+	if ( options.afterScripts.length > 0 ) {
+		const buildLoader = printLoaderLine(`Executing after scripts`)
+		options.debug && console.log( options.afterScripts )
+		try {
+			for ( const script of options.afterScripts ) {
+				await execAsync( buildSSHCommand(`cd ${chimeraHome}; cd ${projectID}; ${script}`), true )
+			}
+		}
+		catch (e) {
+			buildLoader(`After scripts failed`, 'error')
+			fatalError( e )
+		}
+		buildLoader(`After scripts succeeded`)
+	}
+
 
 	// ---- START CONTAINER
 	const startedLoader = printLoaderLine(`Starting container ${projectPrefix}`)
