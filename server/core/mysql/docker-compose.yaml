@@ -1,0 +1,29 @@
+version: '3.1'
+
+services:
+
+  core_maria:
+    image: mariadb
+    restart: unless-stopped
+    container_name: core_maria
+    hostname: maria
+    networks:
+      - "chimera"
+    ports:
+      - '3306:3306'
+    environment:
+      MYSQL_ROOT_PASSWORD: "${MYSQL_ROOT_PASSWORD:-}"
+
+  core_phpmyadmin:
+    image: phpmyadmin
+    restart: unless-stopped
+    container_name: core_phpmyadmin
+    hostname: phpmyadmin.chimera
+    networks:
+      - "chimera"
+    environment:
+      PMA_HOST: "maria"
+
+networks:
+  chimera:
+    external: true

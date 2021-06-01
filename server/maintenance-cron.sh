@@ -1,6 +1,8 @@
 #!/usr/bin/env bash
 
 echo "Cleaning docker container and images ..."
+docker image prune -a -f
+docker container prune -f
 docker system prune -f
 
 echo "Renewing certbot certificates ..."
