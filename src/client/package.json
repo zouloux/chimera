@@ -1,10 +1,11 @@
 {
 	"name": "@zouloux/chimera-client",
-	"version": "0.6.1",
+	"version": "0.6.2",
 	"description": "Command line client pushing projects to a Chimera server.",
 	"author": "Alexis Bouhet (zouloux)",
 	"main": "./chimera.js",
 	"dependencies": {
+		"@solid-js/core": "^0.4.2",
 		"@solid-js/cli": "^1.5.1",
 		"@solid-js/files": "^1.1.0"
 	},
