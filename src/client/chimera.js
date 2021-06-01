@@ -47,6 +47,8 @@ const path = require('path')
 CLICommands.add('push', async (cliArguments, cliOptions, commandName) => {
 	//console.log('PUSH', cliArguments[0], cliOptions.host, cliOptions.branch)
 
+	nicePrint(`{d}Using Chimera client {b/d}v${require('./package.json').version}`)
+
 	// Default options
 	let options = {
 		dockerFile: 'chimera-docker-compose.yaml',
@@ -122,6 +124,11 @@ CLICommands.add('push', async (cliArguments, cliOptions, commandName) => {
 		Specify it with {b}--path{/} option
 		Or add a {b}paths{/} array to {b}.chimera{/}
 	`, { code: 3 })
+
+	if ( cliOptions.showConfig ) {
+		console.log( options )
+		process.exit()
+	}
 
 	await chimeraPush( options )
 }, {
