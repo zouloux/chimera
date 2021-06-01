@@ -1,6 +1,15 @@
 #!/bin/bash
+
+# Go into project directory
+# shellcheck disable=SC2164
 cd "$1"
+
+# Rename docker-compose.yaml and do not crash if same name
 mv $2 docker-compose.yaml > /dev/null 2>&1
-# TODO : Better
+
+# Inject chimera id into dot env
 echo "" >> .env
 echo "CHIMERA_ID=$3" >> .env
+
+# Patch rights so docker user can r/w pushed files
+chmod ugo+rw -R .

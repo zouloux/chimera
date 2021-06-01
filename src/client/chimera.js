@@ -7,11 +7,12 @@ const { chimeraPush } = require('./push')
 
 // ----------------------------------------------------------------------------- RESEARCH
 
-
 /**
  * TODO :
  * - Common folders with symlink
- * - Better .env.chimera injection (do it locally before push ?)
+ * - Better .env.chimera injection
+ * 		- do it with Files locally before push ?
+ * 		- remove line in bash on server ?
  * - Options :
  * 		-q --quiet option
  * 		-h --help option
@@ -19,13 +20,11 @@ const { chimeraPush } = require('./push')
  * - DOC DOC DOC !
  */
 
-
 // V1.0 MVP
 // - client
 // 		chimera push
 // - scripts
 // 		keep folders between pushes
-
 
 // V1.1
 // - server
