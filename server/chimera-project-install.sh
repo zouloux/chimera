@@ -28,18 +28,18 @@ mkdir -p "$projectShared"
 
 # Browse all links to symlink
 for i in "${links[@]}"; do
-  # If not already in commun
+  # If not already in shared
   if [[ ! -e $projectShared/$i ]]; then
-    # Create empty folder if common does not exists in archive
+    # Create empty folder if shared does not exists in archive
     if [[ ! -e $projectTrunk/$i ]]; then mkdir -p $projectTrunk/$i; fi
 
-    # Create parent folders and move from version to commons
-    mkdir -p "$(dirname common/$i)" && mv "$projectTrunk/$i" "$projectShared/${i%/}"
+    # Create parent folders and move from trunk to shared
+    mkdir -p "$(dirname $projectShared/$i)" && mv "$projectTrunk/$i" "$projectShared/${i%/}"
   else
-    # Already existing in commons, remove
+    # Already existing in shared, remove
     #sudo rm -rf $projectTrunk/$i
     rm -rf "${projectTrunk:-'/dev/null'}/$i"
   fi
-  # Link moved or removed folder to common
+  # Link moved or removed folder to shared
   ln -sfn "$projectShared/${i%/}" $projectTrunk/${i%/}
 done
