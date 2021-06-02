@@ -48,7 +48,7 @@ module.exports.chimeraPush = async function( options )
 			imageFiles.push( service.build )
 		}
 		// Get kept volumes
-		service.volumes?.map( volume => {
+		service.volumes && service.volumes.map( volume => {
 			const chimeraKeepVariableName = 'CHIMERA_KEEP'
 			if ( volume.indexOf('${'+chimeraKeepVariableName) === -1 ) return
 			let keep = volume.split('}')[1].split(':')[0]
