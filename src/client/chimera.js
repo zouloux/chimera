@@ -57,6 +57,16 @@ const { chimeraPush } = require('./push')
 // + Plus facile à implémenter
 // + Pas de repo d'images à gérer
 
+// ----------------------------------------------------------------------------- UTILS
+
+// TODO DOC
+function multiInject ( base, propertyName, value ) {
+	base[ propertyName ] = [
+		...base[ propertyName ],
+		...( Array.isArray( value ) ? value : [ value ] )
+	]
+}
+
 // ----------------------------------------------------------------------------- CLI COMMANDS
 
 CLICommands.add('push', async (cliArguments, cliOptions, commandName) => {
@@ -66,7 +76,9 @@ CLICommands.add('push', async (cliArguments, cliOptions, commandName) => {
 	// Default options
 	let options = {
 		dockerFile: 'chimera-docker-compose.yaml',
-		afterScripts: []
+		afterScripts: [],
+		paths: [],
+		keep: []
 	}
 
 	// Load options from .chimera json5 file
@@ -87,32 +99,19 @@ CLICommands.add('push', async (cliArguments, cliOptions, commandName) => {
 	}
 
 	// Override with cli options and arguments
-	if ( cliArguments[0] )
-		options.project = cliArguments[0]
-	else if ( cliOptions.project )
-		options.project = cliOptions.project
-	if ( cliOptions.host )
-		options.host = cliOptions.host
-	if ( cliOptions.branch )
-		options.branch = cliOptions.branch
-	if ( cliOptions.path )
-		options.paths = (
-			Array.isArray( cliOptions.path )
-			? cliOptions.path : [ cliOptions.path ]
-		)
-	if ( cliOptions.dockerFile )
-		options.dockerFile = cliOptions.dockerFile
-	if ( cliOptions.debug )
-		options.debug = true
-	if ( cliOptions.afterScript )
-		options.afterScripts = [
-			...options.afterScripts,
-			...(
-				Array.isArray( cliOptions.afterScript )
-				? cliOptions.afterScript
-				: [ cliOptions.afterScript ]
-			)
-		]
+
+	if ( cliArguments[0] )			options.project = cliArguments[0]
+	else if ( cliOptions.project ) 	options.project = cliOptions.project
+
+	if ( cliOptions.host )			options.host = cliOptions.host
+	if ( cliOptions.branch )		options.branch = cliOptions.branch
+	if ( cliOptions.dockerFile )	options.dockerFile = cliOptions.dockerFile
+
+	if ( cliOptions.path )			multiInject(options, 'paths', cliOptions.path)
+	if ( cliOptions.keep )			multiInject(options, 'keep', cliOptions.keep)
+	if ( cliOptions.afterScript )	multiInject(options, 'afterScripts', cliOptions.afterScript)
+
+	if ( cliOptions.debug )			options.debug = true
 
 	options.env = (
 		cliOptions.env.indexOf('.') === 0
@@ -151,7 +150,7 @@ CLICommands.add('push', async (cliArguments, cliOptions, commandName) => {
 	host	: null,
 	project	: null,
 	env		: '.env',
-	branch	: 'master'
+	branch	: 'master',
 })
 
 // ----------------------------------------------------------------------------- START

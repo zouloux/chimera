@@ -90,7 +90,11 @@ module.exports.chimeraPush = async function( options )
 	}
 
 	// Build a command to be executed on Chimera server
-	const buildSSHCommand = ( sshCommand ) => `ssh ${port ? `-p ${port}` : ''} -o StrictHostKeyChecking=no ${options.host} "${sshCommand}"`
+	const buildSSHCommand = ( sshCommand ) => {
+		const command = `ssh ${port ? `-p ${port}` : ''} -o StrictHostKeyChecking=no ${options.host} "${sshCommand}"`
+		options.debug && console.log('> '+command)
+		return command
+	}
 
 	// Build rsync command to synchronise files and directories
 	const buildRsyncCommand = ( filePath ) => {
@@ -186,7 +190,12 @@ module.exports.chimeraPush = async function( options )
 	// TODO -> Create symlinks persistent folders
 	const installLoader = printLoaderLine(`Install container`)
 	try {
-		await execAsync( buildSSHCommand(`cd ${chimeraHome}; ./chimera-project-install.sh ${projectTrunk} ${projectShared} ${dockerComposeFilePath} ${projectPrefix}`))
+		const installArgumentList = [
+			projectTrunk, projectShared, dockerComposeFilePath, projectPrefix,
+			...options.keep
+		]
+		const installArguments = installArgumentList.filter(v => v).join(' ')
+		await execAsync( buildSSHCommand(`cd ${chimeraHome}; ./chimera-project-install.sh ${installArguments}`))
 	}
 	catch (e) {
 		installLoader(`Cannot install container`, 'error')
@@ -210,7 +219,7 @@ module.exports.chimeraPush = async function( options )
 		const afterScriptsLoader = printLoaderLine(`Executing after scripts`)
 		options.debug && console.log( options.afterScripts )
 		try {
-			await execAsync( buildSSHCommand(`cd ${chimeraProjectTrunk}; ${options.afterScripts.join('; ')}`), true )
+			await execAsync( buildSSHCommand(`cd ${chimeraProjectTrunk}; ${options.afterScripts.join('; ')}`), 'out' )
 		}
 		catch (e) {
 			afterScriptsLoader(`After scripts failed`, 'error')
