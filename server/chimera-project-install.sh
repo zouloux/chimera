@@ -3,11 +3,12 @@
 # Get arguments
 projectTrunk=$1
 projectKeep=$2
-dockerComposePath=$3
-projectPrefix=$4
+relativeChimeraKeep=$3
+dockerComposePath=$4
+projectPrefix=$5
 
 # Get links from argument array
-set -- "${@:5}"
+set -- "${@:6}"
 links=("$@")
 
 # Go into project directory
@@ -17,8 +18,10 @@ cd "$projectTrunk"
 # Rename docker-compose.yaml and do not crash if same name or already exists
 mv $dockerComposePath docker-compose.yaml > /dev/null 2>&1
 
-# Inject chimera id into dot env
-echo "" >> .env;echo "CHIMERA_ID=$projectPrefix" >> .env
+# Inject chimera id and chimera keep into dot env
+echo "" >> .env
+echo "CHIMERA_ID=$projectPrefix" >> .env
+echo "CHIMERA_KEEP=$relativeChimeraKeep" >> .env
 
 # Go back to chimera home
 cd -

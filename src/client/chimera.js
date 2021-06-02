@@ -9,53 +9,16 @@ const { chimeraPush } = require('./push')
 
 /**
  * TODO :
- * - Common folders with symlink
  * - Better .env.chimera injection
  * 		- do it with Files locally before push ?
  * 		- remove line in bash on server ?
  * - Options :
+ *      --show-config option
  * 		-q --quiet option
  * 		-h --help option
  * 		-v --verbose option
  * - DOC DOC DOC !
  */
-
-// V1.0 MVP
-// - client
-// 		chimera push
-// - scripts
-// 		keep folders between pushes
-
-// V1.1
-// - server
-// 		UI - Connect with http
-// 		API - Exec API Commands with an api key
-// 		API - start / stop / delete / list / stats
-
-// V1.1+
-// -> Common folders between branches
-// -> Common services between branches (ex : 1 mysql)
-// chimera stop --branch
-// chimera delete --branch
-
-// V1.2+
-// -> Images repo for projects ( node server image / lamp image ... )
-// -> Images repo for useful services ( preconfigured gitlab for ex )
-// chimera download --branch --volume
-
-// -> Build au niveau du CI (build local) ?
-// + Plus pro, plus clean
-// + Permet de swap l'image en 2 sec
-// - Besoin d'un repo d'images
-// - Transfert de fichier + fat
-
-// -> Build au niveau de Chimera (build distant) ?
-// - Moins pro
-// - Swap plus long car pendant le build, l'image ne tourne pas
-// + Le dossier docker peut-être SHA pour éviter de re-build
-// + Moins de data à transfert (on transfert pas l'image mais son fichier texte)
-// + Plus facile à implémenter
-// + Pas de repo d'images à gérer
 
 // ----------------------------------------------------------------------------- UTILS
 
@@ -78,7 +41,8 @@ CLICommands.add('push', async (cliArguments, cliOptions, commandName) => {
 		dockerFile: 'chimera-docker-compose.yaml',
 		afterScripts: [],
 		paths: [],
-		keep: []
+		keep: [],
+		exclude: []
 	}
 
 	// Load options from .chimera json5 file
@@ -110,8 +74,10 @@ CLICommands.add('push', async (cliArguments, cliOptions, commandName) => {
 	if ( cliOptions.path )			multiInject(options, 'paths', cliOptions.path)
 	if ( cliOptions.keep )			multiInject(options, 'keep', cliOptions.keep)
 	if ( cliOptions.afterScript )	multiInject(options, 'afterScripts', cliOptions.afterScript)
+	if ( cliOptions.exclude )		multiInject(options, 'exclude', cliOptions.exclude)
 
 	if ( cliOptions.debug )			options.debug = true
+	if ( cliOptions['show-config'] )options.showConfig = true
 
 	options.env = (
 		cliOptions.env.indexOf('.') === 0
@@ -137,12 +103,6 @@ CLICommands.add('push', async (cliArguments, cliOptions, commandName) => {
 		Specify it with {b}--path{/} option
 		Or add a {b}paths{/} array to {b}.chimera{/}
 	`, { code: 3 })
-
-	// TODO : DOC
-	if ( cliOptions.showConfig ) {
-		console.log( options )
-		process.exit()
-	}
 
 	// Execute push
 	await chimeraPush( options )

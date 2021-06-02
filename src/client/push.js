@@ -10,7 +10,7 @@ function fatalError ( e = null, code = 1 ) {
 
 module.exports.chimeraPush = async function( options )
 {
-	// -------------------------------------------------------------------------
+	// ------------------------------------------------------------------------- PREPARE OPTIONS
 
 	// Target docker compose for chimera
 	let dockerComposeFilePath = options.dockerFile
@@ -57,32 +57,20 @@ module.exports.chimeraPush = async function( options )
 		})
 	})
 
-	// TODO : Verbose
-	// console.log( options );
-	// console.log( rootFiles )
-	// console.log( options.paths );
+	// Show config object and halt
+	if ( options.showConfig ) {
+		console.log( options )
+		process.exit()
+	}
 
-	// -------------------------------------------------------------------------
-
-	/**
-	 * http://www.delafond.org/traducmanfr/man/man1/rsync.1.html
-	 * -a : Mode archive (va copier les liens symboliques sans les résoudres)
-	 * 		-> -rlptgoD
-	 * -r : Recursif
-	 * -v : Verbose / -q : Quiet
-	 * -z : Compresser
-	 * -u : Mode differentiel, ne change que les fichiers modifiés
-	 * -t : Préserve les dates
-	 * --progress
-	 * --stats
-	 */
+	// ------------------------------------------------------------------------- BUILD COMMANDS
 
 	// Path to project and binaries
 	const chimeraHome = `~/chimera/`
-	const relativeChimeraKeep = '../keep/'
 	const projectRoot = `projects/${options.project}/${options.branch}/`
 	const projectKeep = `${projectRoot}keep/`
 	const projectTrunk = `${projectRoot}trunk/`
+	const relativeChimeraKeep = path.relative(projectTrunk, projectKeep)
 	const chimeraProjectTrunk = `${chimeraHome}${projectTrunk}`
 
 	// Project prefix for internal network and container identifying
@@ -106,6 +94,19 @@ module.exports.chimeraPush = async function( options )
 		options.debug && console.log('> '+command)
 		return command
 	}
+
+	/**
+	 * http://www.delafond.org/traducmanfr/man/man1/rsync.1.html
+	 * -a : Mode archive (va copier les liens symboliques sans les résoudres)
+	 * 		-> -rlptgoD
+	 * -r : Recursif
+	 * -v : Verbose / -q : Quiet
+	 * -z : Compresser
+	 * -u : Mode differentiel, ne change que les fichiers modifiés
+	 * -t : Préserve les dates
+	 * --progress
+	 * --stats
+	 */
 
 	// Build rsync command to synchronise files and directories
 	const buildRsyncCommand = ( filePath ) => {
@@ -150,8 +151,6 @@ module.exports.chimeraPush = async function( options )
 		]
 	}
 
-	// -------------------------------------------------------------------------
-
 	// List all transfer commands
 	const transferCommands = [
 		// Upload root files
@@ -162,9 +161,7 @@ module.exports.chimeraPush = async function( options )
 		...options.paths.filter( v => v ).map( buildRsyncCommand )
 	]
 
-	// -------------------------------------------------------------------------
-
-	// setLoaderScope( options.project )
+	// ------------------------------------------------------------------------- CHIMERA SEQUENCE
 
 	// ---- STOP CONTAINER
 	const stopLoader = printLoaderLine(`Stopping container`)
@@ -198,11 +195,12 @@ module.exports.chimeraPush = async function( options )
 	}
 
 	// ---- INSTALL CONTAINER
-	// TODO -> Create symlinks persistent folders
-	const installLoader = printLoaderLine(`Install container`)
+	const installLoader = printLoaderLine(`Installing container`)
 	try {
 		const installArgumentList = [
-			projectTrunk, projectKeep, dockerComposeFilePath, projectPrefix,
+			//    1            2                3                     4                  5
+			projectTrunk, projectKeep, relativeChimeraKeep, dockerComposeFilePath, projectPrefix,
+			// 6, 7, 8 ...
 			...options.keep
 		]
 		const installArguments = installArgumentList.filter(v => v).join(' ')
