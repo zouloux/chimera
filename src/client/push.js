@@ -69,8 +69,10 @@ module.exports.chimeraPush = async function( options )
 
 	// Path to project and binaries
 	const chimeraHome = `~/chimera/`
-	const projectPath = `projects/${options.project}/${options.branch}/`
-	const chimeraProjectPath = `${chimeraHome}${projectPath}`
+	const projectRoot = `projects/${options.project}/${options.branch}/`
+	const projectShared = `${projectRoot}shared/`
+	const projectTrunk = `${projectRoot}trunk/`
+	const chimeraProjectTrunk = `${chimeraHome}${projectTrunk}`
 
 	// Project prefix for internal network and container identifying
 	const projectPrefix = (
@@ -122,12 +124,12 @@ module.exports.chimeraPush = async function( options )
 		const source = trailing(filePath, false, '/')
 
 		// Generate rsync command
-		rsyncCommand.push(`${source} ${options.host}:${chimeraProjectPath}${destination}`)
+		rsyncCommand.push(`${source} ${options.host}:${chimeraProjectTrunk}${destination}`)
 
 		return [
 			filePath,
 			// Prepare destination parent directory
-			destination && buildSSHCommand(`mkdir -p ${chimeraProjectPath}${destination}`),
+			destination && buildSSHCommand(`mkdir -p ${chimeraProjectTrunk}${destination}`),
 			// Then, generated rsync command
 			rsyncCommand.join(' ')
 		]
@@ -152,7 +154,7 @@ module.exports.chimeraPush = async function( options )
 	// ---- STOP CONTAINER
 	const stopLoader = printLoaderLine(`Stopping container`)
 	try {
-		await execAsync( buildSSHCommand(`cd ${chimeraHome}; ./chimera-project-stop.sh ${projectPath}`) )
+		await execAsync( buildSSHCommand(`cd ${chimeraHome}; ./chimera-project-stop.sh ${chimeraProjectTrunk}`) )
 	}
 	catch (e) {
 		stopLoader(`Cannot stop container`, 'error')
@@ -184,7 +186,7 @@ module.exports.chimeraPush = async function( options )
 	// TODO -> Create symlinks persistent folders
 	const installLoader = printLoaderLine(`Install container`)
 	try {
-		await execAsync( buildSSHCommand(`cd ${chimeraHome}; ./chimera-project-install.sh ${projectPath} ${dockerComposeFilePath} ${projectPrefix}`))
+		await execAsync( buildSSHCommand(`cd ${chimeraHome}; ./chimera-project-install.sh ${projectTrunk} ${projectShared} ${dockerComposeFilePath} ${projectPrefix}`))
 	}
 	catch (e) {
 		installLoader(`Cannot install container`, 'error')
@@ -195,7 +197,7 @@ module.exports.chimeraPush = async function( options )
 	// ---- BUILD CONTAINER
 	const buildLoader = printLoaderLine(`Building container`)
 	try {
-		await execAsync( buildSSHCommand(`cd ${chimeraHome}; ./chimera-project-build.sh ${projectPath}`))
+		await execAsync( buildSSHCommand(`cd ${chimeraHome}; ./chimera-project-build.sh ${projectTrunk}`))
 	}
 	catch (e) {
 		buildLoader(`Cannot build container`, 'error')
@@ -208,7 +210,7 @@ module.exports.chimeraPush = async function( options )
 		const afterScriptsLoader = printLoaderLine(`Executing after scripts`)
 		options.debug && console.log( options.afterScripts )
 		try {
-			await execAsync( buildSSHCommand(`cd ${chimeraProjectPath}; ${options.afterScripts.join('; ')}`), true )
+			await execAsync( buildSSHCommand(`cd ${chimeraProjectTrunk}; ${options.afterScripts.join('; ')}`), true )
 		}
 		catch (e) {
 			afterScriptsLoader(`After scripts failed`, 'error')
@@ -221,7 +223,7 @@ module.exports.chimeraPush = async function( options )
 	const patchRightsLoader = printLoaderLine(`Patching R/W rights`)
 	options.debug && console.log( options.afterScripts )
 	try {
-		await execAsync( buildSSHCommand(`cd ${chimeraHome}; ./chimera-project-patch-rights.sh ${projectPath}`), true )
+		await execAsync( buildSSHCommand(`cd ${chimeraHome}; ./chimera-project-patch-rights.sh ${projectTrunk}`), true )
 	}
 	catch (e) {
 		patchRightsLoader(`Patching R/W right failed`, 'error')
@@ -232,7 +234,7 @@ module.exports.chimeraPush = async function( options )
 	// ---- START CONTAINER
 	const startedLoader = printLoaderLine(`Starting container ${projectPrefix}`)
 	try {
-		await execAsync( buildSSHCommand(`cd ${chimeraHome}; ./chimera-project-start.sh ${projectPath}`))
+		await execAsync( buildSSHCommand(`cd ${chimeraHome}; ./chimera-project-start.sh ${projectTrunk}`))
 	}
 	catch (e) {
 		startedLoader(`Cannot start container`, 'error')
