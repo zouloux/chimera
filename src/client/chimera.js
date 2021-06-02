@@ -9,24 +9,34 @@ const { chimeraPush } = require('./push')
 
 /**
  * TODO :
+ * - DOC DOC DOC !
+ * - Options :
+ *      --show-config -> DOC
+ * 		-q --quiet -> IMPLEMENT + DOC
+ * 		-h --help -> IMPLEMENT + DOC
+ * 		-v --verbose -> IMPLEMENT + DOC
+ *
+ * V1.1 - CHIMERA PUSH
  * - Better .env.chimera injection
  * 		- do it with Files locally before push ?
  * 		- remove line in bash on server ?
- * - Options :
- *      --show-config option
- * 		-q --quiet option
- * 		-h --help option
- * 		-v --verbose option
- * - DOC DOC DOC !
+ *
+ * V1.2 - CHIMERA SYNC
+ * - Sync data between local env and chimera
+ * - Sync folder can be configured in .chimera
+ * - Can sync kept folder only ?
+ * - Direction -> up / down / merge ?
+ * - Can sync database, merge will not work
  */
 
 // ----------------------------------------------------------------------------- UTILS
 
-// TODO DOC
-function multiInject ( base, propertyName, value ) {
-	base[ propertyName ] = [
-		...base[ propertyName ],
-		...( Array.isArray( value ) ? value : [ value ] )
+// Inject some value into an array which is on an object.
+// Will merge arrays if value is an array.
+function multiInject ( object, arrayPropertyName, valueToInject ) {
+	object[ arrayPropertyName ] = [
+		...object[ arrayPropertyName ],
+		...( Array.isArray( valueToInject ) ? valueToInject : [ valueToInject ] )
 	]
 }
 

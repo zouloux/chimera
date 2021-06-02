@@ -79,11 +79,13 @@ module.exports.chimeraPush = async function( options )
 	// Remove all trailing slashes
 	options.paths = processPaths( options.paths )
 	options.keep = processPaths( options.keep )
+	options.exclude = processPaths( options.exclude )
 
 	// Remove duplicates
 	options.paths 			= [...new Set(options.paths)]
 	options.keep 			= [...new Set(options.keep)]
 	options.afterScripts 	= [...new Set(options.afterScripts)]
+	options.exclude 		= [...new Set(options.exclude)]
 
 	// Show config object and halt
 	if ( options.showConfig ) {
@@ -156,9 +158,13 @@ module.exports.chimeraPush = async function( options )
 
 		// Generate rsync command
 		// FIXME : Publish .bin files ?
-		// TODO : Add exclude option to config
 		const rsyncCommand = [`rsync`, `-r -z -u -t --delete --exclude '**/.DS_Store'`];
+
 		// command.push(`-v --dry-run`);
+
+		// Add exclude
+		if ( options.exclude && options.exclude.length > 0 )
+			rsyncCommand.push( options.exclude.map(e => `--exclude '${e}'`).join(' ') )
 
 		// Add port through SSH to command if we got a port
 		if ( port )
