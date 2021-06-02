@@ -2,7 +2,7 @@
 
 # Get arguments
 projectTrunk=$1
-projectShared=$2
+projectKeep=$2
 dockerComposePath=$3
 projectPrefix=$4
 
@@ -23,41 +23,16 @@ echo "" >> .env;echo "CHIMERA_ID=$projectPrefix" >> .env
 # Go back to chimera home
 cd -
 
-# Create project's shared directory
-mkdir -p "$projectShared"
+# Create project's kept directory
+mkdir -p "$projectKeep"
 
-# Browse all links to symlink
+# Browse all kept links
 for i in "${links[@]}"; do
-  # If not already in shared
-  if [[ ! -e $projectShared/$i ]]; then
-    # Create empty folder if shared does not exists in archive
+  # If not already in keep
+  if [[ ! -e $projectKeep/$i ]]; then
+    # Create empty folder if kepts does not exists in trunk
     if [[ ! -e $projectTrunk/$i ]]; then mkdir -p $projectTrunk/$i; fi
-
-    # Create parent folders and move from trunk to shared
-    mkdir -p "$(dirname $projectShared/$i)" && cp -R "$projectTrunk/$i" "$projectShared/${i%/}"
-  #else
-    # Already existing in shared, remove
-    #rm -rf "${projectTrunk:-'/dev/null'}/$i"
+    # Create parent folders and copy from trunk to keep
+    mkdir -p "$(dirname $projectKeep/$i)" && cp -R "$projectTrunk/$i" "$projectKeep/${i%/}"
   fi
-  # Link moved or removed folder to shared
-  #ln -sfn "$(pwd)/${projectShared}${i%/}" $projectTrunk/${i%/}
 done
-
-
-## Browse all links to symlink
-#for i in "${links[@]}"; do
-#  # If not already in shared
-#  if [[ ! -e $projectShared/$i ]]; then
-#    # Create empty folder if shared does not exists in archive
-#    if [[ ! -e $projectTrunk/$i ]]; then mkdir -p $projectTrunk/$i; fi
-#
-#    # Create parent folders and move from trunk to shared
-#    mkdir -p "$(dirname $projectShared/$i)" && mv "$projectTrunk/$i" "$projectShared/${i%/}"
-#  else
-#    # Already existing in shared, remove
-#    #sudo rm -rf $projectTrunk/$i
-#    rm -rf "${projectTrunk:-'/dev/null'}/$i"
-#  fi
-#  # Link moved or removed folder to shared
-#  ln -sfn "$(pwd)/${projectShared}${i%/}" $projectTrunk/${i%/}
-#done

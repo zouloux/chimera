@@ -1,6 +1,6 @@
 const { nicePrint, execAsync, printLoaderLine } = require('@solid-js/cli')
 const { File, FileFinder, Directory } = require('@solid-js/files')
-const { trailing } = require('@solid-js/core')
+const { trailing, leading } = require('@solid-js/core')
 const path = require('path')
 
 function fatalError ( e = null, code = 1 ) {
@@ -36,15 +36,25 @@ module.exports.chimeraPush = async function( options )
 	dockerComposeFile.load()
 	const dockerComposeContent = dockerComposeFile.yaml()
 
-	// Get docker compose services images
+	// Browse docker services
 	Object.keys( dockerComposeContent.services ).map( serviceName => {
 		const service = dockerComposeContent.services[ serviceName ]
-		if ( !('build' in service) ) return
-		if ( Directory.find( service.build ).length === 0 )
-			nicePrint(`
-				{r/n}Cannot find image {b}${service.build}{/r} in docker service {b}${serviceName}
-			`, { code: 7 })
-		imageFiles.push( service.build )
+		// Get docker compose services images to build
+		if ( 'build' in service ) {
+			if ( Directory.find( service.build ).length === 0 )
+				nicePrint(`
+					{r/n}Cannot find image {b}${service.build}{/r} in docker service {b}${serviceName}
+				`, { code: 7 })
+			imageFiles.push( service.build )
+		}
+		// Get kept volumes
+		service.volumes?.map( volume => {
+			const chimeraKeepVariableName = 'CHIMERA_KEEP'
+			if ( volume.indexOf('${'+chimeraKeepVariableName) === -1 ) return
+			let keep = volume.split('}')[1].split(':')[0]
+			keep = leading(keep, false, '/')
+			options.keep.push( keep )
+		})
 	})
 
 	// TODO : Verbose
@@ -69,8 +79,9 @@ module.exports.chimeraPush = async function( options )
 
 	// Path to project and binaries
 	const chimeraHome = `~/chimera/`
+	const relativeChimeraKeep = '../keep/'
 	const projectRoot = `projects/${options.project}/${options.branch}/`
-	const projectShared = `${projectRoot}shared/`
+	const projectKeep = `${projectRoot}keep/`
 	const projectTrunk = `${projectRoot}trunk/`
 	const chimeraProjectTrunk = `${chimeraHome}${projectTrunk}`
 
@@ -191,7 +202,7 @@ module.exports.chimeraPush = async function( options )
 	const installLoader = printLoaderLine(`Install container`)
 	try {
 		const installArgumentList = [
-			projectTrunk, projectShared, dockerComposeFilePath, projectPrefix,
+			projectTrunk, projectKeep, dockerComposeFilePath, projectPrefix,
 			...options.keep
 		]
 		const installArguments = installArgumentList.filter(v => v).join(' ')
