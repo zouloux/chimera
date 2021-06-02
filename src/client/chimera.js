@@ -17,16 +17,25 @@ const { chimeraPush } = require('./push')
  * 		-v --verbose -> IMPLEMENT + DOC
  *
  * V1.1 - CHIMERA PUSH
- * - Better .env.chimera injection
+ * - Shared folders
+ * 		- Like keep folders but shared between all project branches
+ * - Better .env.chimera injection ?
  * 		- do it with Files locally before push ?
  * 		- remove line in bash on server ?
+ * - Check .chimera file and throw if invalid
+ * - Check if chimera server and client has compatible versions
  *
  * V1.2 - CHIMERA SYNC
  * - Sync data between local env and chimera
  * - Sync folder can be configured in .chimera
  * - Can sync kept folder only ?
- * - Direction -> up / down / merge ?
- * - Can sync database, merge will not work
+ * - Choose branch to sync (shared, master, my-branch ...)
+ * - Direction -> up / down / (merge ?)
+ * - Can sync database (merge will not work)
+ *
+ * V1.3 - GITLAB DELETE HOOK
+ * - Stop containers and remove all data of a removed branch from gitlab
+ *   https://docs.gitlab.com/ee/user/project/integrations/webhooks.html
  */
 
 // ----------------------------------------------------------------------------- UTILS

@@ -103,6 +103,8 @@ Can also be something like `*.chimera.domain-name.com A SERVER_IP`
     - Fix `GITLAB_IMAGE_VERSION` to a the latest current gitlab version to avoid unwanted upgrades.
       ( [know more](https://hub.docker.com/r/gitlab/gitlab-ce/tags?page=1&ordering=last_updated) )
     - Set SMTP parameters to allow gitlab to send e-mails.
+    - Avoid empty values for booleans (ex : `GITLAB_SMTP_TLS` should be `true` or `false`, not empty)
+    - [More info about email configuration.](https://gitlab.com/gitlab-org/omnibus-gitlab/blob/master/doc/settings/smtp.md)
 
 Ex : `
 DOMAIN_NAME=chimera.domain-name.com

@@ -107,7 +107,7 @@ module.exports.chimeraPush = async function( options )
 	const projectPrefix = (
 		options.branch === 'master'
 		? options.project
-		: `${options.project}--${options.branch}`
+		: `${options.project}_${options.branch}`
 	)
 
 	// Split port from chimera host to a separated variable

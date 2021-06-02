@@ -35,6 +35,8 @@ services :
         gitlab_rails['smtp_enable_starttls_auto'] = ${GITLAB_SMTP_STARTTLS_AUTO}
         gitlab_rails['smtp_tls'] = ${GITLAB_SMTP_TLS}
         gitlab_rails['smtp_openssl_verify_mode'] = '${GITLAB_SMTP_OPENSSL_VERIFY_MODE}'
+        gitlab_rails['gitlab_email_from'] = '${GITLAB_SMTP_EMAIL_FROM}'
+        gitlab_rails['gitlab_email_reply_to'] = '${GITLAB_SMTP_EMAIL_REPLY_TO}'
 
   core_gitlab-runner :
     image: 'gitlab/gitlab-runner:alpine'
