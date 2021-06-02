@@ -41,5 +41,5 @@ for i in "${links[@]}"; do
     rm -rf "${projectTrunk:-'/dev/null'}/$i"
   fi
   # Link moved or removed folder to shared
-  ln -sfn "$projectShared/${i%/}" $projectTrunk/${i%/}
+  ln -sfn "$(pwd)${projectShared}${i%/}" $projectTrunk/${i%/}
 done
