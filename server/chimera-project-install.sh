@@ -34,12 +34,30 @@ for i in "${links[@]}"; do
     if [[ ! -e $projectTrunk/$i ]]; then mkdir -p $projectTrunk/$i; fi
 
     # Create parent folders and move from trunk to shared
-    mkdir -p "$(dirname $projectShared/$i)" && mv "$projectTrunk/$i" "$projectShared/${i%/}"
-  else
+    mkdir -p "$(dirname $projectShared/$i)" && cp -R "$projectTrunk/$i" "$projectShared/${i%/}"
+  #else
     # Already existing in shared, remove
-    #sudo rm -rf $projectTrunk/$i
-    rm -rf "${projectTrunk:-'/dev/null'}/$i"
+    #rm -rf "${projectTrunk:-'/dev/null'}/$i"
   fi
   # Link moved or removed folder to shared
-  ln -sfn "$(pwd)/${projectShared}${i%/}" $projectTrunk/${i%/}
+  #ln -sfn "$(pwd)/${projectShared}${i%/}" $projectTrunk/${i%/}
 done
+
+
+## Browse all links to symlink
+#for i in "${links[@]}"; do
+#  # If not already in shared
+#  if [[ ! -e $projectShared/$i ]]; then
+#    # Create empty folder if shared does not exists in archive
+#    if [[ ! -e $projectTrunk/$i ]]; then mkdir -p $projectTrunk/$i; fi
+#
+#    # Create parent folders and move from trunk to shared
+#    mkdir -p "$(dirname $projectShared/$i)" && mv "$projectTrunk/$i" "$projectShared/${i%/}"
+#  else
+#    # Already existing in shared, remove
+#    #sudo rm -rf $projectTrunk/$i
+#    rm -rf "${projectTrunk:-'/dev/null'}/$i"
+#  fi
+#  # Link moved or removed folder to shared
+#  ln -sfn "$(pwd)/${projectShared}${i%/}" $projectTrunk/${i%/}
+#done

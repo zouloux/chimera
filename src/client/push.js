@@ -232,7 +232,7 @@ module.exports.chimeraPush = async function( options )
 	const patchRightsLoader = printLoaderLine(`Patching R/W rights`)
 	options.debug && console.log( options.afterScripts )
 	try {
-		await execAsync( buildSSHCommand(`cd ${chimeraHome}; ./chimera-project-patch-rights.sh ${projectTrunk}`), true )
+		await execAsync( buildSSHCommand(`cd ${chimeraHome}; ./chimera-project-patch-rights.sh ${projectRoot}`), true )
 	}
 	catch (e) {
 		patchRightsLoader(`Patching R/W right failed`, 'error')
