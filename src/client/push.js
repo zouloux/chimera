@@ -69,8 +69,8 @@ module.exports.chimeraPush = async function( options )
 
 	// Path to project and binaries
 	const chimeraHome = `~/chimera/`
-	const projectID = `projects/${options.project}/${options.branch}/`
-	const chimeraProjectPath = `${chimeraHome}${projectID}`
+	const projectPath = `projects/${options.project}/${options.branch}/`
+	const chimeraProjectPath = `${chimeraHome}${projectPath}`
 
 	// Project prefix for internal network and container identifying
 	const projectPrefix = (
@@ -152,7 +152,7 @@ module.exports.chimeraPush = async function( options )
 	// ---- STOP CONTAINER
 	const stopLoader = printLoaderLine(`Stopping container`)
 	try {
-		await execAsync( buildSSHCommand(`cd ${chimeraHome}; ./chimera-project-stop.sh ${projectID}`) )
+		await execAsync( buildSSHCommand(`cd ${chimeraHome}; ./chimera-project-stop.sh ${projectPath}`) )
 	}
 	catch (e) {
 		stopLoader(`Cannot stop container`, 'error')
@@ -184,7 +184,7 @@ module.exports.chimeraPush = async function( options )
 	// TODO -> Create symlinks persistent folders
 	const installLoader = printLoaderLine(`Install container`)
 	try {
-		await execAsync( buildSSHCommand(`cd ${chimeraHome}; ./chimera-project-install.sh ${projectID} ${dockerComposeFilePath} ${projectPrefix}`))
+		await execAsync( buildSSHCommand(`cd ${chimeraHome}; ./chimera-project-install.sh ${projectPath} ${dockerComposeFilePath} ${projectPrefix}`))
 	}
 	catch (e) {
 		installLoader(`Cannot install container`, 'error')
@@ -195,34 +195,44 @@ module.exports.chimeraPush = async function( options )
 	// ---- BUILD CONTAINER
 	const buildLoader = printLoaderLine(`Building container`)
 	try {
-		await execAsync( buildSSHCommand(`cd ${chimeraHome}; ./chimera-project-build.sh ${projectID}`))
+		await execAsync( buildSSHCommand(`cd ${chimeraHome}; ./chimera-project-build.sh ${projectPath}`))
 	}
 	catch (e) {
 		buildLoader(`Cannot build container`, 'error')
 		fatalError( e )
 	}
-	buildLoader(`Built container`)
+	buildLoader(`Container built`)
 
 	// ---- AFTER SCRIPTS
 	if ( options.afterScripts.length > 0 ) {
-		const buildLoader = printLoaderLine(`Executing after scripts`)
+		const afterScriptsLoader = printLoaderLine(`Executing after scripts`)
 		options.debug && console.log( options.afterScripts )
 		try {
-			for ( const script of options.afterScripts ) {
-				await execAsync( buildSSHCommand(`cd ${chimeraHome}; cd ${projectID}; ${script}`), true )
-			}
+			await execAsync( buildSSHCommand(`cd ${chimeraProjectPath}; ${options.afterScripts.join('; ')}`), true )
 		}
 		catch (e) {
-			buildLoader(`After scripts failed`, 'error')
+			afterScriptsLoader(`After scripts failed`, 'error')
 			fatalError( e )
 		}
-		buildLoader(`After scripts succeeded`)
+		afterScriptsLoader(`After scripts succeeded`)
 	}
+
+	// ---- PATCH RW RIGHTS
+	const patchRightsLoader = printLoaderLine(`Patching R/W rights`)
+	options.debug && console.log( options.afterScripts )
+	try {
+		await execAsync( buildSSHCommand(`cd ${chimeraHome}; ./chimera-project-patch-rights.sh ${projectPath}`), true )
+	}
+	catch (e) {
+		patchRightsLoader(`Patching R/W right failed`, 'error')
+		fatalError( e )
+	}
+	patchRightsLoader(`R/W rights patched`)
 
 	// ---- START CONTAINER
 	const startedLoader = printLoaderLine(`Starting container ${projectPrefix}`)
 	try {
-		await execAsync( buildSSHCommand(`cd ${chimeraHome}; ./chimera-project-start.sh ${projectID}`))
+		await execAsync( buildSSHCommand(`cd ${chimeraHome}; ./chimera-project-start.sh ${projectPath}`))
 	}
 	catch (e) {
 		startedLoader(`Cannot start container`, 'error')

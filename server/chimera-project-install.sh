@@ -10,6 +10,3 @@ mv $2 docker-compose.yaml > /dev/null 2>&1
 # Inject chimera id into dot env
 echo "" >> .env
 echo "CHIMERA_ID=$3" >> .env
-
-# Patch rights so docker user can r/w pushed files
-chmod ugo+rw -R .
