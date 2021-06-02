@@ -8,6 +8,17 @@ function fatalError ( e = null, code = 1 ) {
 	process.exit( code )
 }
 
+function processPaths ( pathsToProcess ) {
+	return pathsToProcess.map( p => {
+		p = trailing(p, false, '/')
+		if ( p.indexOf('./') === 0 )
+			p = p.substr(2, p.length)
+		return p
+	})
+}
+
+const chimeraKeepVariableName = 'CHIMERA_KEEP'
+
 module.exports.chimeraPush = async function( options )
 {
 	// ------------------------------------------------------------------------- PREPARE OPTIONS
@@ -47,15 +58,32 @@ module.exports.chimeraPush = async function( options )
 				`, { code: 7 })
 			imageFiles.push( service.build )
 		}
-		// Get kept volumes
-		service.volumes && service.volumes.map( volume => {
-			const chimeraKeepVariableName = 'CHIMERA_KEEP'
-			if ( volume.indexOf('${'+chimeraKeepVariableName) === -1 ) return
-			let keep = volume.split('}')[1].split(':')[0]
-			keep = leading(keep, false, '/')
-			options.keep.push( keep )
+		// Parse volumes to get what to send and what to keep
+		if (!service.volumes) return
+		service.volumes.map( volume => {
+			// Only mapped volumes
+			if ( volume.indexOf(':') === -1 ) return
+			const localPart = volume.split(':')[0]
+			// Get volumes to send, only when starting with ./
+			if ( localPart.indexOf('./') === 0 )
+				options.paths.push( localPart )
+			// Get kept volumes
+			if ( localPart.indexOf('${'+chimeraKeepVariableName) !== -1 )
+				options.keep.push(
+					leading(localPart.split('}')[1], false, '/')
+				)
 		})
 	})
+
+	// Remove all relative start (./)
+	// Remove all trailing slashes
+	options.paths = processPaths( options.paths )
+	options.keep = processPaths( options.keep )
+
+	// Remove duplicates
+	options.paths 			= [...new Set(options.paths)]
+	options.keep 			= [...new Set(options.keep)]
+	options.afterScripts 	= [...new Set(options.afterScripts)]
 
 	// Show config object and halt
 	if ( options.showConfig ) {
@@ -77,7 +105,7 @@ module.exports.chimeraPush = async function( options )
 	const projectPrefix = (
 		options.branch === 'master'
 		? options.project
-		: `${options.project}_${options.branch}`
+		: `${options.project}--${options.branch}`
 	)
 
 	// Split port from chimera host to a separated variable
