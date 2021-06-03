@@ -1,4 +1,4 @@
-# New server setup
+# New Chimera server setup
 
 ### Requirements
 

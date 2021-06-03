@@ -1,11 +1,11 @@
 #!/usr/bin/env bash
 
+# Go into server directory, relatively
+cd ../../server || exit 1
+
 bold=$(tput bold)
 normal=$(tput sgr0)
 
-echo ""
-echo "${bold}Chimera local proxy${normal}"
-echo ""
 echo "Started Chimera containers will be available at :"
 echo "  ${bold}https://\$CHIMERA_ID.chimera.localhost${normal}"
 echo ""
@@ -30,34 +30,21 @@ if [ ! -f core/mysql/.env ]; then
     read -s -n 1 -p "Press any key to continue . . ."
 fi
 
-echo "Enabling Nginx and MariaDB configs ..."
+printf "Enabling Nginx and MariaDB configs ... "
 cp core/nginx/data/config/virtual-hosts/localhost.conf.template core/nginx/data/config/virtual-hosts/localhost.conf
+echo "${bold}Ok${normal}"
 
-echo "Generating SSL certificates for *.chimera.localhost ..."
+printf "Generating SSL certificates for *.chimera.localhost ... "
 mkcert -key-file core/nginx/data/certs/localhost-key.pem -cert-file core/nginx/data/certs/localhost-cert.pem chimera.localhost *.chimera.localhost > /dev/null 2>&1
+echo "${bold}Ok${normal}"
 
-echo ""
-echo "Starting up MariaDB ..."
+printf "Starting up MariaDB ... "
 cd core/mysql || exit 1
 docker-compose up -d > /dev/null 2>&1
-echo "Done"
-echo ""
+echo "${bold}Ok${normal}"
 
-echo "Building Nginx proxy ..."
+printf "Starting Nginx proxy ... "
 cd ../../core/nginx || exit 1
-docker-compose build > /dev/null 2>&1
-echo "Done"
+docker-compose up --build -d > /dev/null 2>&1
+echo "${bold}Ok${normal}"
 echo ""
-
-#echo "Started Nginx proxy"
-#echo "-> Hit ctrl + c to stop servers gracefully (please wait 10s)"
-#docker-compose up > /dev/null 2>&1
-
-echo "Starting Nginx proxy ..."
-docker-compose up -d > /dev/null 2>&1
-echo "Done"
-
-#echo ""
-#echo "Stopping MariaDB ..."
-#cd ../../core/mysql || exit 1
-#docker-compose down > /dev/null 2>&1
