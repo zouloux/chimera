@@ -23,6 +23,9 @@ server
         proxy_pass $target;
     }
 
+    # Disable stapling on auto-signed certificates
+    ssl_stapling off;
+
     # Enable HTTP and HTTPS with mkcert certificates
     # https://github.com/FiloSottile/mkcert
     listen 80;

@@ -6,6 +6,7 @@
 /core/nginx/data/logs/
 /core/nginx/data/html/
 /core/nginx/data/config/virtual-hosts/*.conf
+/core/mysql/data/
 .env
 
 /projects/

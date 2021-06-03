@@ -13,6 +13,8 @@ services:
       - '3306:3306'
     environment:
       MYSQL_ROOT_PASSWORD: "${MYSQL_ROOT_PASSWORD:-}"
+    volumes :
+      - './data/mysql:/var/lib/mysql'
 
   core_phpmyadmin:
     image: phpmyadmin

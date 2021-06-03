@@ -10,10 +10,8 @@ if [ ! -f /root/config/nginx.conf ]; then
 fi
 
 # Link config from shared folder
-echo "Link nginx config from shared folder ..."
 rm -rf /etc/nginx
 ln -s /root/config /etc/nginx
-echo "Done"
 
 # Start nginx in process mode
 nginx -g 'daemon off;'
