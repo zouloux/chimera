@@ -9,25 +9,30 @@ normal=$(tput sgr0)
 echo "Started Chimera containers will be available at :"
 echo "  ${bold}https://\$CHIMERA_ID.chimera.localhost${normal}"
 echo ""
-echo "A MariaDB service is started. To connect :"
-echo "  host (from localhost) : 127.0.0.1"
-echo "  host (from docker): maria"
-echo "  user : root"
-echo "  port : 3306"
-echo ""
 echo "PhpMyAdmin is available here : "
 echo "  ${bold}https://phpmyadmin.chimera.localhost${normal}"
 echo ""
 
 if [ ! -f core/mysql/.env ]; then
-    LOCAL_MARIA_PASSWORD=$(cat /dev/random | LC_CTYPE=C tr -dc "[:alpha:]" | head -c 8)
-    echo "MYSQL_ROOT_PASSWORD=${LOCAL_MARIA_PASSWORD}" > core/mysql/.env
+  LOCAL_MARIA_PASSWORD=$(cat /dev/random | LC_CTYPE=C tr -dc "[:alpha:]" | head -c 8)
+  echo "MYSQL_ROOT_PASSWORD=${LOCAL_MARIA_PASSWORD}" > core/mysql/.env
 
-    echo "A ${bold}new password for MariaDB${normal} has be created."
-    echo "Please write it down : ${bold}${LOCAL_MARIA_PASSWORD}${normal}"
-    echo "( This password is available in ${bold}core/mysql/.env${normal} anyway )"
-    echo ""
-    read -s -n 1 -p "Press any key to continue . . ."
+  echo "A ${bold}new password for MariaDB${normal} has been created."
+  echo "Please write it down : ${bold}${LOCAL_MARIA_PASSWORD}${normal}"
+  echo "( This password is available in ${bold}core/mysql/.env${normal} anyway )"
+  echo ""
+  read -s -n 1 -p "Continue ..."
+
+  echo ""
+  echo "MariaDB service is started. Connection instructions :"
+  echo "  host (from localhost) : 127.0.0.1"
+  echo "  host (from docker): maria"
+  echo "  user : root"
+  echo "  password : ${LOCAL_MARIA_PASSWORD}"
+  echo "  port : 3306"
+  echo ""
+  read -s -n 1 -p "Continue ..."
+  echo ""
 fi
 
 printf "Enabling Nginx and MariaDB configs ... "

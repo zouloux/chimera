@@ -1,7 +1,8 @@
 # Chimera local proxy
 
-Chimera local proxy is an Nginx proxy which enable SSL on your locally started
-chimera projects. It also support a pre-configured MariaDB with persistent data.
+Chimera local proxy is an Nginx proxy which enable SSL access on your locally
+started chimera projects.
+It also support a pre-configured MariaDB with persistent data.
 
 For now, only this method is available. But a built-in npm module is planned.
 
@@ -19,3 +20,31 @@ For now, only this method is available. But a built-in npm module is planned.
 ##### Link chimera-proxy executable 
 - `cd chimera-trunk`
 - `ln -sf "$(pwd)/src/local-proxy/chimera-proxy.sh" /usr/local/bin/chimera-proxy`
+
+### Start proxy
+
+- `chimera-proxy start`
+
+Then in your browser, open your started chimera project with :
+- `https://$CHIMERA_ID.chimera.localhost`
+
+### Stop proxy
+
+- `chimera-proxy stop`
+  
+### Connect to MariaDB
+
+At first start, a MariaDB password will be created, keep connection instructions
+somewhere.
+
+- user : root
+- password : Your generated password
+- port : 3306
+
+From localhost :
+- host : localhost
+
+From docker :
+- host : maria
+
+Also, `https://phpmyadmin.chimera.localhost` is available when proxy is started.
