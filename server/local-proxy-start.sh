@@ -10,7 +10,8 @@ echo "Started Chimera containers will be available at :"
 echo "  ${bold}https://\$CHIMERA_ID.chimera.localhost${normal}"
 echo ""
 echo "A MariaDB service is started. To connect :"
-echo "  host : 127.0.0.1"
+echo "  host (from localhost) : 127.0.0.1"
+echo "  host (from docker): maria"
 echo "  user : root"
 echo "  port : 3306"
 echo ""
@@ -39,13 +40,24 @@ echo ""
 echo "Starting up MariaDB ..."
 cd core/mysql || exit 1
 docker-compose up -d > /dev/null 2>&1
+echo "Done"
+echo ""
 
-cd ../../core/nginx || exit 1
 echo "Building Nginx proxy ..."
+cd ../../core/nginx || exit 1
 docker-compose build > /dev/null 2>&1
-echo "Starting up Nginx proxy ... (ctrl + c to stop servers gracefully)"
-docker-compose up
+echo "Done"
+echo ""
 
-echo "Stopping MariaDB ..."
-cd ../../core/mysql || exit 1
-docker-compose down > /dev/null 2>&1
+#echo "Started Nginx proxy"
+#echo "-> Hit ctrl + c to stop servers gracefully (please wait 10s)"
+#docker-compose up > /dev/null 2>&1
+
+echo "Starting Nginx proxy ..."
+docker-compose up -d > /dev/null 2>&1
+echo "Done"
+
+#echo ""
+#echo "Stopping MariaDB ..."
+#cd ../../core/mysql || exit 1
+#docker-compose down > /dev/null 2>&1
