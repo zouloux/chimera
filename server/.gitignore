@@ -2,6 +2,7 @@
 /core/gitlab/data/*/
 !/core/gitlab/data/runner-config/
 /core/gitlab/data/runner-config/config.toml
+/core/nginx/data/certs/
 /core/nginx/data/logs/
 /core/nginx/data/html/
 /core/nginx/data/config/virtual-hosts/*.conf

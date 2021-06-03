@@ -114,8 +114,8 @@ GITLAB_IMAGE_VERSION=13.12.1-ce.0
 FIY, Gitlab is configured to run behind an SSL enabled Nginx proxy.
 ([more info](https://www.itsfullofstars.de/2019/06/gitlab-behind-a-reverse-proxy/))
 
-2. Configure nginx host
-- Go to Ngins virtual-hosts config folder :
+2. Configure nginx proxy
+- Go to Nginx virtual-hosts config folder :
   `cd ~/chimera/core/nginx/data/config/virtual-hosts`
 - Copy templates `cp chimera.conf.template chimera.conf` and `cp default.conf.template default.conf`
 - Edit chimera host file with vi or any editor : `vi chimera.conf`
