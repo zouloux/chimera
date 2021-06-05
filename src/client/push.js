@@ -52,11 +52,18 @@ module.exports.chimeraPush = async function( options )
 		const service = dockerComposeContent.services[ serviceName ]
 		// Get docker compose services images to build
 		if ( 'build' in service ) {
-			if ( Directory.find( service.build ).length === 0 )
+			// Get image path
+			let imagePath;
+			if ( typeof service.build === 'string' )
+				imagePath = service.build;
+			else if ( 'context' in service.build && typeof service.build.context === 'string' )
+				imagePath = service.build.context
+			// Check if directory exists and add
+			if ( !imagePath || Directory.find( service.build ).length === 0 )
 				nicePrint(`
 					{r/n}Cannot find image {b}${service.build}{/r} in docker service {b}${serviceName}
 				`, { code: 7 })
-			imageFiles.push( service.build )
+			imageFiles.push( imagePath )
 		}
 		// Parse volumes to get what to send and what to keep
 		if (!service.volumes) return

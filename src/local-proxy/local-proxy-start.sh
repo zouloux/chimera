@@ -1,5 +1,15 @@
 #!/usr/bin/env bash
 
+# TODO : JS VERSION / EVOLUTIONS ->
+# TODO : DATABASES :
+# TODO :    - Ask to start Maria
+# TODO :    - Implement MongoDB when needed in a project ...
+# TODO :    - Create a command to setup databases managers
+# TODO :    - How to manage PHPMyAdmin ?
+# TODO : NGINX :
+# TODO :    - Switch default port for certain projects (via config ? useful ?)
+
+
 # Go into server directory, relatively
 cd ../../server || exit 1
 
@@ -34,7 +44,8 @@ if [ ! -f core/mysql/.env ]; then
   echo "";echo ""
 fi
 
-printf "Enabling Nginx and MariaDB configs ... "
+
+printf "Enabling configs ... "
 cp core/nginx/data/config/virtual-hosts/localhost.conf.template core/nginx/data/config/virtual-hosts/localhost.conf
 echo "${bold}Ok${normal}"
 
