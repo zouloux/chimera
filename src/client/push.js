@@ -254,15 +254,15 @@ module.exports.chimeraPush = async function( options )
 	installLoader(`Container installed`)
 
 	// ---- BUILD CONTAINER
-	const buildLoader = printLoaderLine(`Building container`)
-	try {
-		await execAsync( buildSSHCommand(`cd ${chimeraHome}; ./chimera-project-build.sh ${projectTrunk}`))
-	}
-	catch (e) {
-		buildLoader(`Cannot build container`, 'error')
-		fatalError( e )
-	}
-	buildLoader(`Container built`)
+	// const buildLoader = printLoaderLine(`Building container`)
+	// try {
+	// 	await execAsync( buildSSHCommand(`cd ${chimeraHome}; ./chimera-project-build.sh ${projectTrunk}`))
+	// }
+	// catch (e) {
+	// 	buildLoader(`Cannot build container`, 'error')
+	// 	fatalError( e )
+	// }
+	// buildLoader(`Container built`)
 
 	// ---- AFTER SCRIPTS
 	if ( options.afterScripts.length > 0 ) {
