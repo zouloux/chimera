@@ -59,9 +59,9 @@ module.exports.chimeraPush = async function( options )
 			else if ( 'context' in service.build && typeof service.build.context === 'string' )
 				imagePath = service.build.context
 			// Check if directory exists and add
-			if ( !imagePath || Directory.find( service.build ).length === 0 )
+			if ( !imagePath || Directory.find( imagePath ).length === 0 )
 				nicePrint(`
-					{r/n}Cannot find image {b}${service.build}{/r} in docker service {b}${serviceName}
+					{r/n}Cannot find image {b}${imagePath}{/r} in docker service {b}${serviceName}
 				`, { code: 7 })
 			imageFiles.push( imagePath )
 		}
