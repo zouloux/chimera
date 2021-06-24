@@ -16,7 +16,7 @@ services :
       - './data/data:/var/opt/gitlab'
       - './data/web-config:/etc/gitlab'
       - './data/logs:/var/log/gitlab'
-    mem_limit: "${GITLAB_MEMORY_LIMIT}"
+    mem_limit: "${GITLAB_WEB_MEMORY_LIMIT}"
     environment:
       TZ: Europe/Paris
       GITLAB_OMNIBUS_CONFIG: |
@@ -44,6 +44,7 @@ services :
     container_name: core_gitlab-runner
     networks:
       - "chimera"
+    mem_limit: "${GITLAB_RUNNER_MEMORY_LIMIT}"
     volumes :
       - './data/runner-config:/etc/gitlab-runner'
       - '/var/run/docker.sock:/var/run/docker.sock'
