@@ -2,10 +2,10 @@ version: '3.1'
 
 services:
 
-  core_maria:
+  service_maria:
     image: mariadb
     restart: unless-stopped
-    container_name: core_maria
+    container_name: service_maria
     hostname: maria
     networks:
       - "chimera"
@@ -16,10 +16,10 @@ services:
     volumes :
       - './data/mysql:/var/lib/mysql:delegated'
 
-  core_phpmyadmin:
+  service_phpmyadmin:
     image: phpmyadmin
     restart: unless-stopped
-    container_name: core_phpmyadmin
+    container_name: service_phpmyadmin
     hostname: phpmyadmin.chimera
     networks:
       - "chimera"

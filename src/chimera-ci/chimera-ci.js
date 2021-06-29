@@ -3,7 +3,7 @@
 const { CLICommands, nicePrint } = require('@solid-js/cli')
 const { File } = require('@solid-js/files')
 const path = require('path')
-const { chimeraPush } = require('./push')
+const { chimeraPush } = require('./commands/push')
 
 // ----------------------------------------------------------------------------- RESEARCH
 
@@ -130,6 +130,14 @@ CLICommands.add('push', async (cliArguments, cliOptions, commandName) => {
 	project	: null,
 	env		: '.env',
 	branch	: 'master',
+})
+
+// ----------------------------------------------------------------------------- DELETE
+
+CLICommands.add('delete', async (cliArguments, cliOptions, commandName) => {
+	// FIXME : TODO
+	console.error(`Command not available yet`);
+	process.exit(1);
 })
 
 // ----------------------------------------------------------------------------- START
