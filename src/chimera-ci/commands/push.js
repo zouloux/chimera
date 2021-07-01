@@ -19,18 +19,37 @@ function processPaths ( pathsToProcess ) {
 
 const chimeraKeepVariableName = 'CHIMERA_KEEP'
 
+const defaultDockerFiles = [
+	'docker-compose.chimera.yaml',
+	'docker-compose.chimera.yml',
+	'docker-compose.yaml',
+	'docker-compose.yml',
+]
+
+const fileExists = f => File.find( f ).length !== 0
+
 module.exports.chimeraPush = async function( options )
 {
 	// ------------------------------------------------------------------------- PREPARE OPTIONS
 
 	// Target docker compose for chimera
 	let dockerComposeFilePath = options.dockerFile
-	if ( File.find(dockerComposeFilePath).length === 0 )
-		dockerComposeFilePath = 'docker-compose.yaml'
 
-	// If default docker-compose not found
-	if ( File.find(dockerComposeFilePath).length === 0 )
-		nicePrint(`{r/b}Docker compose file {b}${options.dockerFile}{/r} or {b}${dockerComposeFilePath}{/r} not found.`, { code: 4 })
+	// Check if specified docker file exists
+	if ( dockerComposeFilePath && !fileExists(dockerComposeFilePath) )
+		nicePrint(`{r/b}Specified docker compose file {b}${dockerComposeFilePath}{/r} not found.`, { code: 4 })
+
+	// Get first default docker file available
+	let defaultDockerFileIndex = 0
+	do {
+		// Default docker file not found
+		if ( !(defaultDockerFileIndex in defaultDockerFiles) )
+			nicePrint(`{r/b}Docker compose file not found.`, { code: 4 })
+		// Target docker file
+		dockerComposeFilePath = defaultDockerFiles[ defaultDockerFileIndex ]
+		defaultDockerFileIndex ++
+	}
+	while ( !fileExists(dockerComposeFilePath) )
 
 	// Files to transfer
 	const rootFiles = [ options.env, dockerComposeFilePath ]
@@ -42,10 +61,14 @@ module.exports.chimeraPush = async function( options )
 
 	// Load docker compose
 	const dockerComposeFile = new File( dockerComposeFilePath )
-	if ( !dockerComposeFile.exists() )
-		nicePrint(`{r/b}Docker file {b}${dockerComposeFilePath} not found`, { code: 6 } )
-	dockerComposeFile.load()
-	const dockerComposeContent = dockerComposeFile.yaml()
+	let dockerComposeContent
+	try {
+		dockerComposeFile.load()
+		dockerComposeContent = dockerComposeFile.yaml()
+	}
+	catch (e) {
+		nicePrint(`{r/b}Invalid docker file {b}${dockerComposeFilePath}{/r}.`, { code: 5 })
+	}
 
 	// Browse docker services
 	Object.keys( dockerComposeContent.services ).map( serviceName => {
@@ -103,12 +126,12 @@ module.exports.chimeraPush = async function( options )
 	// ------------------------------------------------------------------------- BUILD COMMANDS
 
 	// Path to project and binaries
-	const chimeraHome = `~/chimera/`
+	const remoteChimeraHome = `~/chimera/`
 	const projectRoot = `projects/${options.project}/${options.branch}/`
 	const projectKeep = `${projectRoot}keep/`
 	const projectTrunk = `${projectRoot}trunk/`
 	const relativeChimeraKeep = path.relative(projectTrunk, projectKeep)
-	const chimeraProjectTrunk = `${chimeraHome}${projectTrunk}`
+	const chimeraProjectTrunk = `${remoteChimeraHome}${projectTrunk}`
 
 	// Project prefix for internal network and container identifying
 	const projectPrefix = (
@@ -192,22 +215,43 @@ module.exports.chimeraPush = async function( options )
 		]
 	}
 
-	// List all transfer commands
-	const transferCommands = [
+	// ------------------------------------------------------------------------- SEND FILES
+
+	async function execTransferCommands ( transferCommands ) {
+		for ( const transferBlock of transferCommands ) {
+			const name = transferBlock[0]
+			options.debug && console.log(transferBlock);
+			const transferLoader = printLoaderLine(`Sending ${name}`)
+			try {
+				if ( transferBlock.length === 1 )
+					transferLoader(`Skipped ${name}`)
+				else {
+					transferBlock[1] && await execAsync( transferBlock[1] )
+					transferBlock[2] && await execAsync( transferBlock[2] )
+					transferLoader(`Sent ${name}`)
+				}
+			}
+			catch ( e ) {
+				transferLoader(`Cannot send ${name}`)
+				fatalError( e )
+			}
+		}
+	}
+
+	// ------------------------------------------------------------------------- CHIMERA SEQUENCE
+
+	// ---- TRANSFER ROOT FILES
+	await execTransferCommands([
 		// Upload root files
 		buildRsyncCommand( rootFiles ),
 		// Upload docker image files
 		...imageFiles.map( buildRsyncCommand ),
-		// All options files to send
-		...options.paths.filter( v => v ).map( buildRsyncCommand )
-	]
-
-	// ------------------------------------------------------------------------- CHIMERA SEQUENCE
+	])
 
 	// ---- STOP CONTAINER
 	const stopLoader = printLoaderLine(`Stopping container`)
 	try {
-		await execAsync( buildSSHCommand(`cd ${chimeraHome}; ./chimera-project-stop.sh ${chimeraProjectTrunk}`) )
+		await execAsync( buildSSHCommand(`cd ${remoteChimeraHome}; ./chimera-project-stop.sh ${chimeraProjectTrunk}`) )
 	}
 	catch (e) {
 		stopLoader(`Cannot stop container`, 'error')
@@ -215,25 +259,21 @@ module.exports.chimeraPush = async function( options )
 	}
 	stopLoader(`Stopped container`)
 
-	// ---- SEND FILES
-	for ( const transferBlock of transferCommands ) {
-		const name = transferBlock[0]
-		options.debug && console.log(transferBlock);
-		const transferLoader = printLoaderLine(`Sending ${name}`)
-		try {
-			if ( transferBlock.length === 1 )
-				transferLoader(`Skipped ${name}`)
-			else {
-				transferBlock[1] && await execAsync( transferBlock[1] )
-				transferBlock[2] && await execAsync( transferBlock[2] )
-				transferLoader(`Sent ${name}`)
-			}
-		}
-		catch ( e ) {
-			transferLoader(`Cannot send ${name}`)
-			fatalError( e )
-		}
+	// ---- BUILD CONTAINER
+	const buildLoader = printLoaderLine(`Building container`)
+	try {
+		await execAsync( buildSSHCommand(`cd ${remoteChimeraHome}; ./chimera-project-build.sh ${projectTrunk}`))
 	}
+	catch (e) {
+		buildLoader(`Cannot build container`, 'error')
+		fatalError( e )
+	}
+	buildLoader(`Container built`)
+
+	// ---- SEND PROJECT FILES
+	await execTransferCommands(
+		options.paths.filter( v => v ).map( buildRsyncCommand )
+	);
 
 	// ---- INSTALL CONTAINER
 	const installLoader = printLoaderLine(`Installing container`)
@@ -245,24 +285,13 @@ module.exports.chimeraPush = async function( options )
 			...options.keep
 		]
 		const installArguments = installArgumentList.filter(v => v).join(' ')
-		await execAsync( buildSSHCommand(`cd ${chimeraHome}; ./chimera-project-install.sh ${installArguments}`))
+		await execAsync( buildSSHCommand(`cd ${remoteChimeraHome}; ./chimera-project-install.sh ${installArguments}`))
 	}
 	catch (e) {
 		installLoader(`Cannot install container`, 'error')
 		fatalError( e )
 	}
 	installLoader(`Container installed`)
-
-	// ---- BUILD CONTAINER
-	const buildLoader = printLoaderLine(`Building container`)
-	try {
-		await execAsync( buildSSHCommand(`cd ${chimeraHome}; ./chimera-project-build.sh ${projectTrunk}`))
-	}
-	catch (e) {
-		buildLoader(`Cannot build container`, 'error')
-		fatalError( e )
-	}
-	buildLoader(`Container built`)
 
 	// ---- AFTER SCRIPTS
 	if ( options.afterScripts.length > 0 ) {
@@ -282,7 +311,7 @@ module.exports.chimeraPush = async function( options )
 	const patchRightsLoader = printLoaderLine(`Patching R/W rights`)
 	options.debug && console.log( options.afterScripts )
 	try {
-		await execAsync( buildSSHCommand(`cd ${chimeraHome}; ./chimera-project-patch-rights.sh ${projectRoot}`), true )
+		await execAsync( buildSSHCommand(`cd ${remoteChimeraHome}; ./chimera-project-patch-rights.sh ${projectRoot}`), true )
 	}
 	catch (e) {
 		patchRightsLoader(`Patching R/W right failed`, 'error')
@@ -293,7 +322,7 @@ module.exports.chimeraPush = async function( options )
 	// ---- START CONTAINER
 	const startedLoader = printLoaderLine(`Starting container ${projectPrefix}`)
 	try {
-		await execAsync( buildSSHCommand(`cd ${chimeraHome}; ./chimera-project-start.sh ${projectTrunk}`))
+		await execAsync( buildSSHCommand(`cd ${remoteChimeraHome}; ./chimera-project-start.sh ${projectTrunk}`))
 	}
 	catch (e) {
 		startedLoader(`Cannot start container`, 'error')

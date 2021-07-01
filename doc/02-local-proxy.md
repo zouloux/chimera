@@ -1,5 +1,10 @@
 # Chimera local proxy
 
+# OBSOLETE DOC
+### Install client with `npm i -g @zouloux/chimera-client` and use `chimera proxy start`
+
+---
+
 Chimera local proxy is an Nginx proxy which enable SSL access on your locally
 started chimera projects.
 It also support a pre-configured MariaDB with persistent data.
