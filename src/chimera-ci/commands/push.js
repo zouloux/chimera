@@ -240,14 +240,6 @@ module.exports.chimeraPush = async function( options )
 
 	// ------------------------------------------------------------------------- CHIMERA SEQUENCE
 
-	// ---- TRANSFER ROOT FILES
-	await execTransferCommands([
-		// Upload root files
-		buildRsyncCommand( rootFiles ),
-		// Upload docker image files
-		...imageFiles.map( buildRsyncCommand ),
-	])
-
 	// ---- STOP CONTAINER
 	const stopLoader = printLoaderLine(`Stopping container`)
 	try {
@@ -259,16 +251,13 @@ module.exports.chimeraPush = async function( options )
 	}
 	stopLoader(`Stopped container`)
 
-	// ---- BUILD CONTAINER
-	const buildLoader = printLoaderLine(`Building container`)
-	try {
-		await execAsync( buildSSHCommand(`cd ${remoteChimeraHome}; ./chimera-project-build.sh ${projectTrunk}`))
-	}
-	catch (e) {
-		buildLoader(`Cannot build container`, 'error')
-		fatalError( e )
-	}
-	buildLoader(`Container built`)
+	// ---- TRANSFER ROOT FILES
+	await execTransferCommands([
+		// Upload root files
+		buildRsyncCommand( rootFiles ),
+		// Upload docker image files
+		...imageFiles.map( buildRsyncCommand ),
+	])
 
 	// ---- SEND PROJECT FILES
 	await execTransferCommands(
@@ -292,6 +281,17 @@ module.exports.chimeraPush = async function( options )
 		fatalError( e )
 	}
 	installLoader(`Container installed`)
+
+	// ---- BUILD CONTAINER
+	const buildLoader = printLoaderLine(`Building container`)
+	try {
+		await execAsync( buildSSHCommand(`cd ${remoteChimeraHome}; ./chimera-project-build.sh ${projectTrunk}`))
+	}
+	catch (e) {
+		buildLoader(`Cannot build container`, 'error')
+		fatalError( e )
+	}
+	buildLoader(`Container built`)
 
 	// ---- AFTER SCRIPTS
 	if ( options.afterScripts.length > 0 ) {
