@@ -11,6 +11,8 @@
 		"@solid-js/cli": "^1.6.1",
 		"@solid-js/core": "^0.4.2",
 		"@solid-js/files": "^1.2.0",
+		"is-port-reachable": "^3.0.0",
+		"open": "^8.2.1",
 		"preferences": "^2.0.2"
 	}
 }

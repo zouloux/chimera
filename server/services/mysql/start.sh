@@ -20,9 +20,10 @@ if [ ! -f services/mysql/.env ]; then
   echo "- password : ${LOCAL_MARIA_PASSWORD}"
   echo "- port : 3306"
   echo ""
-  echo "PhpMyAdmin is available here : "
-  echo "→ ${bold}https://phpmyadmin.chimera.localhost${normal}"
-  echo ""
   read -s -n 1 -p "Continue ..."
   echo "";echo ""
 fi
+
+echo "PhpMyAdmin is available here : "
+echo "→ ${bold}https://phpmyadmin.chimera.localhost${normal}"
+echo ""
