@@ -11,12 +11,11 @@ if [ ! -f .env ]; then
   echo ""
   echo "A ${bold}new password for MariaDB${normal} has been created :"
   echo "→ ${bold}${LOCAL_MARIA_PASSWORD}${normal}"
-  echo "( This password is visible in ${bold}$(pwd)chimera/server/services/mysql/.env${normal} anyway )"
+  echo "( This password is visible in ${bold}$(pwd)/.env${normal} anyway )"
   echo ""
   echo "Press any key to continue ..."
   read -s -n 1
-  echo "";
-  echo "Connection instructions :"
+  echo "${bold}Connection instructions :${normal}"
   echo "- host (from localhost) : 127.0.0.1"
   echo "- host (from docker): maria"
   echo "- user : root"
@@ -25,7 +24,6 @@ if [ ! -f .env ]; then
   echo ""
   echo "Press any key to continue ..."
   read -s -n 1
-  echo "";
 fi
 
 echo "PhpMyAdmin is available here : "
