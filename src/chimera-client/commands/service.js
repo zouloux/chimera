@@ -50,14 +50,13 @@ async function start ( serviceToStart )
 	const service = await getAndAskService(serviceToStart, 'start')
 	const servicePath = path.join(getServicesRoot(), service)
 
-	const setupFile = new File( path.join(servicePath, 'setup.sh') )
-
-	console.log( setupFile )
-	console.log( setupFile.exists() )
-	console.log( await setupFile.existsAsync() )
+	const startFile = new File( path.join(servicePath, 'start.sh') )
+	if ( startFile.exists() ) {
+		await execAsync(startFile.path, 3, {
+			cwd: servicePath,
+			env: process.env
+		})
 		process.exit();
-	if ( setupFile.exists() ) {
-		console.log('EXISTS')
 	}
 
 	await tryTask(`Starting ${service} container`, async () => {
