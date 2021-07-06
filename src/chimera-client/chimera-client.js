@@ -66,27 +66,10 @@ CLICommands.add('project', async (cliArguments, cliOptions, commandName) => {
 CLICommands.add('service', async (cliArguments, cliOptions, commandName) => {
 	printUsingVersion()
 	checkReady()
-	// const target = ( (cliOptions.remote || cliOptions.R) )
 	askAction(`Action on service`, [ 'list', 'start', 'stop' ], cliArguments, action => {
 		require('./commands/service')[ action ]( cliArguments[1] )
 	})
-}, {
-	// remote: false, R: false
 })
-
-// ----------------------------------------------------------------------------- CONNECT
-
-// CLICommands.add('connect', async (cliArguments, cliOptions, commandName) => {
-// 	printUsingVersion()
-// 	checkReady();
-// 	const remote = cliOptions.remote ?? cliOptions.R
-// 	const container = await askContainer( remote, cliArguments[1], true )
-// 	askAction(`Connect action`, [ 'screen', 'exec' ], cliArguments, action => {
-// 		require('./commands/connect')[ action ]( remote, container )
-// 	})
-// }, {
-// 	remote: false, R: false
-// })
 
 // ----------------------------------------------------------------------------- START
 

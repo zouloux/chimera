@@ -35,6 +35,7 @@ function findProject ( allowFail = false ) {
 			return null
 		else
 			nicePrint(`{b/r}CWD not in a Chimera project.`, { code: 4 })
+
 	const projectFile = new File( projectPath )
 	let projectConfig
 	try {
@@ -85,35 +86,6 @@ async function getContainerList ( onlyProjects = false )
 	return containers
 }
 
-async function askContainer ( remote, containerName, onlyProjects = true )
-{
-	if ( !remote )
-	{
-		const containers = await getContainerList();
-		let selectedContainer
-		if ( containerName ) {
-			selectedContainer = containers.find( container => (
-				container.name.toLowerCase() === containerName.toLowerCase()
-				|| container.niceName.toLowerCase() === containerName.toLowerCase()
-			))
-		}
-
-		if ( !selectedContainer ) {
-			const containerListForUI = containers.map( container => container.niceName )
-			const choice = await askList(`Select container`, containerListForUI, {
-				returnType: 'key'
-			})
-			selectedContainer = containers[ choice ]
-		}
-
-		return selectedContainer
-	}
-	else {
-		console.error(`Remote container connection is not implemented yet.`)
-		process.exit(1)
-	}
-}
-
 // ----------------------------------------------------------------------------- TASKS / LOGS
 
 const taskError = (t, e) => { t.error(2, e) }
@@ -124,7 +96,6 @@ module.exports = {
 	getPreferences,
 	browseParentsForFile,
 	findProject,
-	askContainer,
 	getContainerList,
 	taskError,
 }

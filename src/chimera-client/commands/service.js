@@ -1,4 +1,6 @@
 const path = require( "path" );
+const { nicePrint } = require( "@solid-js/cli" );
+const { getContainerList } = require( "./_common" );
 const { resolveHome } = require( "@solid-js/files" );
 const { taskError } = require( "./_common" );
 const { execAsync } = require( "@solid-js/cli" );
@@ -37,9 +39,42 @@ async function getAndAskService ( targetedService, action )
 
 async function list ()
 {
-	const services = await getServicesList()
-	services.map( service => {
-		console.log(service)
+	// Get installed services list from Chimera repository
+	const serviceNames = await getServicesList()
+
+	// Get all running containers
+	const containers = await getContainerList()
+
+	// Browse all available service names
+	serviceNames.map( serviceName => {
+		// Open service's docker-compose
+		const dockerComposeFile = new File( path.join(getServicesRoot(), serviceName, 'docker-compose.yaml') )
+
+		// Try to find sub-services in docker-compose
+		let subServices = []
+		if ( dockerComposeFile.exists() ) {
+			const dockerComposeContent = dockerComposeFile.yaml()
+			//console.log(dockerComposeContent);
+			if ('services' in dockerComposeContent) {
+				Object.keys(dockerComposeContent.services).map( key => {
+					const subService = dockerComposeContent.services[ key ]
+					const associatedContainer = containers.find( container => (
+						key === container.name || key === container.niceName
+						|| subService.image === container.name || subService.image === container.niceName
+						|| subService.containerName === container.name || subService.containerName === container.niceName
+					))
+					subServices.push({
+						name: subService.containerName ?? subService.image ?? key,
+						container: associatedContainer
+					})
+				})
+			}
+		}
+
+		nicePrint(`{b/w}${serviceName}`)
+		subServices.map( subService => {
+			nicePrint(`{d/w}- ${subService.name} (${!!subService.container ? '{d/g}running' : '{d/r}stopped'}{d})`)
+		})
 	})
 }
 

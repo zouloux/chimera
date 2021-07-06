@@ -1,6 +1,6 @@
 const path = require( "path" );
 const { Directory, resolveHome } = require( "@solid-js/files" );
-const { nicePrint, execAsync, tryTask, askList } = require( "@solid-js/cli" );
+const { execAsync, tryTask, askList } = require( "@solid-js/cli" );
 const { getPreferences, getContainerList, taskError } = require( "./_common" );
 const isPortReachable = require('is-port-reachable');
 

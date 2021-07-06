@@ -1,11 +1,8 @@
 const path = require( "path" );
 const { onProcessKilled } = require( "@solid-js/cli" );
-const { onProcessWillExit } = require( "@solid-js/cli" );
 const { createTask } = require( "@solid-js/cli" );
-const { askContainer } = require( "./_common" );
 const { delay } = require( "@solid-js/core" );
 const { printLoaderLine } = require( "@solid-js/cli" );
-const { tryTask } = require( "@solid-js/cli" );
 const { execAsync } = require( "@solid-js/cli" );
 const { findProject } = require( "./_common" );
 const { nicePrint } = require( "@solid-js/cli" );

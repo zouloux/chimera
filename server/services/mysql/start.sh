@@ -26,6 +26,6 @@ if [ ! -f .env ]; then
   read -s -n 1
 fi
 
-echo "PhpMyAdmin is available here : "
+echo "PhpMyAdmin will be available here : "
 echo "→ ${bold}https://phpmyadmin.chimera.localhost${normal}"
 echo ""
