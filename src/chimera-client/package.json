@@ -8,7 +8,7 @@
 		"chimera": "./chimera-client.js"
 	},
 	"dependencies": {
-		"@solid-js/cli": "^1.6.2",
+		"@solid-js/cli": "^1.6.3",
 		"@solid-js/core": "^0.4.2",
 		"@solid-js/files": "^1.2.0",
 		"is-port-reachable": "^3.0.0",
