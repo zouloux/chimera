@@ -1,9 +1,10 @@
-const path = require( "path" );
+const { resolveHome } = require( "@solid-js/files" );
+const { askList } = require( "@solid-js/cli" );
 const { getPreferences } = require( "./_common" );
-
 const { execAsync, askInput, nicePrint } = require( "@solid-js/cli" );
 const { FileFinder, Directory } = require( "@solid-js/files" );
 
+// ----------------------------------------------------------------------------- UTILS
 
 async function checkExecutable ( executableName )
 {
@@ -15,6 +16,8 @@ async function checkExecutable ( executableName )
 	const execFile = FileFinder.find('file', whichExec)
 	return execFile.length === 1
 }
+
+// ----------------------------------------------------------------------------- SETUP
 
 async function setup ()
 {
@@ -39,10 +42,17 @@ async function setup ()
 		`, { code: 2 })
 
 	// Ask for default distant chimera
-	const chimeraHost = await askInput(`Chimera SSH host, with port (ex : root@chimera.my-host.com:2002)`)
+	// const chimeraHost = await askInput(`Chimera SSH host, with port (ex : root@chimera.my-host.com:2002)`, {
+	// 	defaultValue: preferences.chimeraHost
+	// })
 
-	if ( !preferences.chimeraPath )
-	{
+	if ( preferences.chimeraPath ) {
+		nicePrint(`{b}Chimera repository is already installed.`)
+		const update = await askList(`Do you wish to update it ?`, ['yes', 'no'])
+		if ( update[0] === 0 )
+			await execAsync(`git pull`, 2, { cwd: resolveHome(preferences.chimeraPath) })
+	}
+	else {
 		// Ask where to install repo
 		const chimeraPath = await askInput(`Chimera repository needs to be cloned somewhere.`, {
 			defaultValue: '~/chimera'
@@ -69,13 +79,14 @@ async function setup ()
 
 	// Save preferences
 	preferences.ready = true;
-	preferences.chimeraHost = chimeraHost
+	// preferences.chimeraHost = chimeraHost
 	preferences.save();
 
 	// All good
 	nicePrint(`{g/b}Chimera is ready`)
 }
 
+// ----------------------------------------------------------------------------- EXPORTS / API
 
 module.exports = {
 	setup,

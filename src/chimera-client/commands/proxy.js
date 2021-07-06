@@ -1,10 +1,8 @@
 const path = require( "path" );
 const { Directory, resolveHome } = require( "@solid-js/files" );
-const { nicePrint, execAsync, tryTask } = require( "@solid-js/cli" );
-const { getPreferences } = require( "./_common" );
-const { noop } = require( "@solid-js/core" );
+const { nicePrint, execAsync, tryTask, askList } = require( "@solid-js/cli" );
+const { getPreferences, getContainerList, taskError } = require( "./_common" );
 const isPortReachable = require('is-port-reachable');
-const { taskError } = require( "./_common" );
 
 // ----------------------------------------------------------------------------- UTILS
 
@@ -18,10 +16,19 @@ const portNotAvailable = port => {
 
 async function start ()
 {
+	// Check if nginx is already started
+	// Ask to restart it if already started
+	const containers = await getContainerList()
+	if ( containers.find( container => container.name === 'core_nginx' ) ) {
+		const restart = await askList(`Chimera proxy is already running. Do you want to restart it ?`, ['no', 'yes'])
+		if ( restart[0] === 1 ) module.exports.restart();
+		return;
+	}
+
 	await tryTask(`Checking ports`, async () => {
-		if (await isPortReachable(80))
+		if ( await isPortReachable(80) )
 			portNotAvailable(80)
-		if (await isPortReachable(443))
+		if ( await isPortReachable(443) )
 			portNotAvailable(443)
 	}, taskError)
 
@@ -40,15 +47,10 @@ async function start ()
 	}, taskError)
 
 	await tryTask(`Starting Nginx container`, async () => {
-		await execAsync(`docker-compose up --build --detach --force-recreate`, 0, {
+		await execAsync(`docker-compose up --build --detach`, 0, {
 			cwd: path.join(serverRoot, 'core/nginx')
 		})
 	}, taskError)
-
-	nicePrint(`
-		{b/g}Started Chimera containers will be available at :
-		→ {b}https://$CHIMERA_ID.chimera.localhost
-	`)
 }
 
 // ----------------------------------------------------------------------------- STOP
@@ -62,9 +64,18 @@ async function stop ()
 	}, taskError)
 }
 
+// ----------------------------------------------------------------------------- RESTART
+
+async function restart ()
+{
+	await stop();
+	await start();
+}
+
 // ----------------------------------------------------------------------------- EXPORTS API
 
 module.exports = {
 	start,
 	stop,
+	restart,
 }

@@ -56,7 +56,6 @@ async function start ( serviceToStart )
 			cwd: servicePath,
 			env: process.env
 		})
-		process.exit();
 	}
 
 	await tryTask(`Starting ${service} container`, async () => {
@@ -64,7 +63,6 @@ async function start ( serviceToStart )
 			cwd: servicePath
 		})
 	}, taskError)
-
 }
 
 // ----------------------------------------------------------------------------- STOP

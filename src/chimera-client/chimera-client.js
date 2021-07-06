@@ -1,15 +1,8 @@
 #!/usr/bin/env node
 
-const { findProject } = require( "./commands/_common" );
-const { CLICommands, nicePrint, askInput, askList } = require('@solid-js/cli')
-const { getPreferences, askContainer } = require( "./commands/_common" );
+const { CLICommands, nicePrint, askList } = require('@solid-js/cli')
+const { getPreferences } = require( "./commands/_common" );
 const version = require('./package.json').version
-
-// ----------------------------------------------------------------------------- RESEARCH
-
-/**
- * TODO
- */
 
 // ----------------------------------------------------------------------------- UTILS
 
@@ -51,7 +44,7 @@ CLICommands.add('config', async (cliArguments, cliOptions, commandName) => {
 CLICommands.add('proxy', async (cliArguments, cliOptions, commandName) => {
 	printUsingVersion()
 	checkReady()
-	askAction(`Action on proxy`, [ 'start', 'stop' ], cliArguments, action => {
+	askAction(`Action on proxy`, [ 'start', 'stop', 'restart' ], cliArguments, action => {
 		require('./commands/proxy')[ action ](  )
 	})
 }, {})
@@ -97,14 +90,16 @@ CLICommands.add('service', async (cliArguments, cliOptions, commandName) => {
 
 // ----------------------------------------------------------------------------- START
 
-CLICommands.start( ( commandName, error, cliArguments, cliOptions, results ) => {
-	if ( !commandName || results.length === 0 ) {
-		printUsingVersion()
-		// TODO -> Automatic version
-		// TODO -> Help
-		nicePrint(`
-			{r/b}Missing command name.
-			Available commands :
-		`, { code: 3 })
-	}
+// TODO -> Help
+
+CLICommands.start( async ( commandName, error, cliArguments, cliOptions, results ) => {
+	// No command executed
+	if ( results.length !== 0 ) return
+	printUsingVersion()
+	// Show error if we asked for a command
+	commandName && nicePrint(`{r/b}Unknown command name ${commandName}.`)
+	// Show list of available commands. Only show config if not ready.
+	const availableCommands = ( !getPreferences().ready ? ['config'] : CLICommands.list() )
+	const command = await askList(`Please select Chimera command`, availableCommands)
+	await CLICommands.run( command[1], cliArguments, cliOptions )
 });

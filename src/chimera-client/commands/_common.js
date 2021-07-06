@@ -13,14 +13,11 @@ const preferences = new Preferences('zouloux.chimera-client', {
 	encrypt: false
 })
 
-function getPreferences () {
-	return preferences
-}
+function getPreferences () { return preferences }
 
 // ----------------------------------------------------------------------------- BROWSE HELPER
 
-function browseParentsForFile ( cwd, fileName )
-{
+function browseParentsForFile ( cwd, fileName ) {
 	let currentFilePath = path.join( cwd, fileName )
 	while ( FileFinder.find('file', currentFilePath).length === 0 ) {
 		currentFilePath = path.resolve( path.join( path.dirname( currentFilePath ), '../', fileName ) )
@@ -46,6 +43,10 @@ function findProject ( allowFail = false ) {
 	} catch (e) {
 		nicePrint(`{b/r}Invalid .chimera.yml file.`, { code: 5 })
 	}
+
+	if ( typeof projectConfig.project !== 'string' )
+		nicePrint(`{b/r}Mandatory 'project' property is missing from .chimera.yml file.`, { code: 1 })
+
 	return {
 		root: path.dirname( projectPath ),
 		config: projectConfig,
@@ -75,15 +76,20 @@ function parseContainerList ( buffer )
 	return containers;
 }
 
+async function getContainerList ( onlyProjects = false )
+{
+	const containerListBuffer = await execAsync(`docker ps`)
+	let containers = parseContainerList( containerListBuffer )
+	if ( onlyProjects )
+		containers = containers.filter( container => container.isProject )
+	return containers
+}
+
 async function askContainer ( remote, containerName, onlyProjects = true )
 {
 	if ( !remote )
 	{
-		const containerListBuffer = await execAsync(`docker ps`)
-		let containers = parseContainerList( containerListBuffer )
-		if ( onlyProjects )
-			containers = containers.filter( container => container.isProject )
-
+		const containers = await getContainerList();
 		let selectedContainer
 		if ( containerName ) {
 			selectedContainer = containers.find( container => (
@@ -119,5 +125,6 @@ module.exports = {
 	browseParentsForFile,
 	findProject,
 	askContainer,
+	getContainerList,
 	taskError,
 }

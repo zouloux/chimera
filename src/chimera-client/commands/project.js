@@ -1,4 +1,6 @@
 const path = require( "path" );
+const { onProcessKilled } = require( "@solid-js/cli" );
+const { onProcessWillExit } = require( "@solid-js/cli" );
 const { createTask } = require( "@solid-js/cli" );
 const { askContainer } = require( "./_common" );
 const { delay } = require( "@solid-js/core" );
@@ -47,7 +49,7 @@ async function start ( cliArguments, cliOptions )
 	const cwd = project.root
 	const dockerFile = getDockerFile( project.root )
 
-	let loaderLine = printLoaderLine(`Building docker project`)
+	let loaderLine = printLoaderLine(`Building ${project.config.project}`)
 	try {
 		await execAsync(`docker-compose -f ${dockerFile} build --force-recreate`, 0, { cwd })
 	} catch (e) {
@@ -58,12 +60,18 @@ async function start ( cliArguments, cliOptions )
 	loaderLine(`Docker project built`);
 
 	try {
-		execAsync(`docker-compose -f ${dockerFile} up --no-build`, 3, { cwd })
+		execAsync(`docker-compose -f ${dockerFile} up --no-build --abort-on-container-exit`, 3, { cwd })
 	} catch (e) {
 		nicePrint(`{b/r}An error occurred inside docker VM.`)
 		console.error( e )
 		process.exit( 1 )
 	}
+
+	onProcessKilled( async () => {
+		//const closeLine = printLoaderLine(`Stopping  ${project.config.project}`)
+		await execAsync(`docker-compose -f ${dockerFile} down --remove-orphans`, 2, { cwd })
+		//closeLine(`${project.config.project} stopped.`);
+	})
 
 	if ( cliOptions.open || cliOptions.O ) {
 		await delay(2)
@@ -85,11 +93,13 @@ async function exec ()
 {
 	// Find project
 	const project = findProject()
-	const container = await askContainer( false, project.config.project, true )
+	// const container = await askContainer( false, project.config.project, true )
+	const projectName = project.config.project
+	const containerID = `project_${project.config.project}`
 
 	// Connect to a piped shell
-	const connectTask = createTask(`Connecting to ${container.niceName}`)
-	const command = `docker exec -i ${container.id} /bin/bash`
+	const connectTask = createTask(`Connecting to ${projectName}`)
+	const command = `docker exec -i ${containerID} /bin/bash`
 	const childProcess = require('child_process').exec(command, {
 		env: process.env,
 		cwd: process.cwd()
@@ -126,7 +136,7 @@ async function exec ()
 	// Wait connection and detect errors
 	await delay(.2)
 	if (hadErrorWhileLoading) {
-		connectTask.error(`Unable to connect to ${container.niceName}`)
+		connectTask.error(`Unable to connect to ${projectName}`)
 		console.error(nicePrint(`{b/r}${hadErrorWhileLoading}`, {output: 'return'}))
 		process.exit(2)
 	}
@@ -137,7 +147,7 @@ async function exec ()
 	});
 
 	// Connection success
-	connectTask.success(`Connected to ${container.niceName}`)
+	connectTask.success(`Connected to ${projectName}`)
 	printShellInvite();
 }
 

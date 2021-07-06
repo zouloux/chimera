@@ -18,9 +18,9 @@ cd "$projectTrunk"
 # Rename docker-compose.yaml and do not crash if same name or already exists
 mv $dockerComposePath docker-compose.yaml > /dev/null 2>&1
 
-# Inject chimera id and chimera keep into dot env
+# Inject compose project name and chimera keep into dot env
 echo "" >> .env
-echo "CHIMERA_ID=$projectPrefix" >> .env
+echo "COMPOSE_PROJECT_NAME=$projectPrefix" >> .env
 echo "CHIMERA_KEEP=$relativeChimeraKeep" >> .env
 
 # Go back to chimera home
