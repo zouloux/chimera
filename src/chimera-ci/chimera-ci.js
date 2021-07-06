@@ -113,7 +113,7 @@ CLICommands.add('push', async (cliArguments, cliOptions, commandName) => {
 	`, { code: 2 })
 	!options.project && nicePrint(`
 		{r/b}Missing {b}project{/r} parameter.
-		Specify it with first argument like {b}chimera push --project $PROJECT{/}, or set it in {b}.chimera.yml{/}
+		Specify it with project option like {b}chimera push --project $PROJECT{/}, or set it in {b}.chimera.yml{/}
 	`, { code: 3 })
 	!options.paths && nicePrint(`
 		{r/b}Missing {b}paths{/r} parameters.
