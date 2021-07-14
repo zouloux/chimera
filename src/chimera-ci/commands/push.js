@@ -173,18 +173,25 @@ module.exports.chimeraPush = async function( options )
 		// Destination directory to be pre-created
 		let destination = ''
 
-		// If several files are sent, always start from root
-		if ( Array.isArray(filePath) )
-			filePath = filePath.join(' ')
+		// Force filePath to be an array
+		if ( !Array.isArray(filePath) )
+			filePath = [ filePath ]
+
+		// Convert all file paths
+		const fileList = filePath.map( f => {
+			// File without trailing slash to avoid wrong destination
+			f = trailing(f, false, '/')
+			// Remove file from list if does not exists
+			// FIXME : strict mode which warn or halt ?
+			if ( FileFinder.list( f ).length === 0 ) return null
+			// Resolve file path relative to project root
+			f = path.relative( options.cwd, path.resolve(f) )
+			return f
+		}).filter( f => f)
 
 		// If file does not exists, skip it (register name but no command)
-		else if ( FileFinder.list( filePath ).length === 0 )
+		if ( fileList.length === 0 )
 			return [ filePath ]
-
-			// Only one file or directory
-		// Target parent directory to prepare and create before transfer
-		else
-			destination = path.relative( process.cwd(), path.resolve(filePath, '../') )
 
 		// Generate rsync command
 		// FIXME : Publish .bin files ?
@@ -200,14 +207,14 @@ module.exports.chimeraPush = async function( options )
 		if ( port )
 			rsyncCommand.push(`-e 'ssh -p ${port}'`)
 
-		// Source file without trailing slash to avoid wrong destination
-		const source = trailing(filePath, false, '/')
+		// Convert file path array to string
+		const source = fileList.join(' ')
 
 		// Generate rsync command
 		rsyncCommand.push(`${source} ${options.host}:${chimeraProjectTrunk}${destination}`)
 
 		return [
-			filePath,
+			source,
 			// Prepare destination parent directory
 			destination && buildSSHCommand(`mkdir -p ${chimeraProjectTrunk}${destination}`),
 			// Then, generated rsync command

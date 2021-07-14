@@ -121,6 +121,9 @@ CLICommands.add('push', async (cliArguments, cliOptions, commandName) => {
 		Or add a {b}paths{/} array to {b}.chimera.yml{/}
 	`, { code: 3 })
 
+	// Project root, do not use process.cwd which can be wrong
+	options.cwd = path.resolve('.')
+
 	// Execute push
 	await chimeraPush( options )
 }, {
