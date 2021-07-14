@@ -98,6 +98,7 @@ CLICommands.add('push', async (cliArguments, cliOptions, commandName) => {
 
 	if ( cliOptions.debug )				options.debug = true
 	if ( cliOptions['show-config'] )	options.showConfig = true
+	if ( cliOptions['dry-run'] )		options.dryRun = true
 
 	options.env = (
 		cliOptions.env.indexOf('.') === 0
@@ -115,11 +116,7 @@ CLICommands.add('push', async (cliArguments, cliOptions, commandName) => {
 		{r/b}Missing {b}project{/r} parameter.
 		Specify it with project option like {b}chimera push --project $PROJECT{/}, or set it in {b}.chimera.yml{/}
 	`, { code: 3 })
-	!options.paths && nicePrint(`
-		{r/b}Missing {b}paths{/r} parameters.
-		Specify it with {b}--path{/} option
-		Or add a {b}paths{/} array to {b}.chimera.yml{/}
-	`, { code: 3 })
+	if (!options.paths) options.paths = []
 
 	// Project root, do not use process.cwd which can be wrong
 	options.cwd = path.resolve('.')
@@ -131,6 +128,7 @@ CLICommands.add('push', async (cliArguments, cliOptions, commandName) => {
 	project	: null,
 	env		: '.env',
 	branch	: 'master',
+	dryRun	: false
 })
 
 // ----------------------------------------------------------------------------- DELETE

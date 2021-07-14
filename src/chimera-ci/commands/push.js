@@ -28,7 +28,7 @@ const defaultDockerFiles = [
 
 const fileExists = f => File.find( f ).length !== 0
 
-module.exports.chimeraPush = async function( options )
+async function chimeraPush ( options )
 {
 	// ------------------------------------------------------------------------- PREPARE OPTIONS
 
@@ -70,6 +70,9 @@ module.exports.chimeraPush = async function( options )
 		nicePrint(`{r/b}Invalid docker file {b}${dockerComposeFilePath}{/r}.`, { code: 5 })
 	}
 
+	// Only send volumes automatically if path is not set
+	const sendVolumes = !(options.paths && options.paths.length > 0)
+
 	// Browse docker services
 	Object.keys( dockerComposeContent.services ).map( serviceName => {
 		const service = dockerComposeContent.services[ serviceName ]
@@ -88,6 +91,8 @@ module.exports.chimeraPush = async function( options )
 				`, { code: 7 })
 			imageFiles.push( imagePath )
 		}
+		// Do not send volumes if have some paths defined
+		if (!sendVolumes) return
 		// Parse volumes to get what to send and what to keep
 		if (!service.volumes) return
 		service.volumes.map( volume => {
@@ -186,6 +191,8 @@ module.exports.chimeraPush = async function( options )
 			if ( FileFinder.list( f ).length === 0 ) return null
 			// Resolve file path relative to project root
 			f = path.relative( options.cwd, path.resolve(f) )
+			// Compute destination directory, only compatible with filePath with 1 path
+			destination = path.relative( options.cwd, path.join(f, '../') )
 			return f
 		}).filter( f => f)
 
@@ -195,9 +202,9 @@ module.exports.chimeraPush = async function( options )
 
 		// Generate rsync command
 		// FIXME : Publish .bin files ?
-		const rsyncCommand = [`rsync`, `-r -z -u -t --delete --exclude '**/.DS_Store'`];
+		let rsyncCommand = [`rsync`, `-r -z -u -t --delete --exclude '**/.DS_Store'`];
 
-		// command.push(`-v --dry-run`);
+		options.dryRun && rsyncCommand.push(`-v --dry-run`);
 
 		// Add exclude
 		if ( options.exclude && options.exclude.length > 0 )
@@ -210,16 +217,19 @@ module.exports.chimeraPush = async function( options )
 		// Convert file path array to string
 		const source = fileList.join(' ')
 
+		// Generate destination command
+		const destinationCommand = destination && buildSSHCommand(`mkdir -p ${chimeraProjectTrunk}${destination}`)
+
 		// Generate rsync command
 		rsyncCommand.push(`${source} ${options.host}:${chimeraProjectTrunk}${destination}`)
+		rsyncCommand = rsyncCommand.join(' ')
 
-		return [
-			source,
-			// Prepare destination parent directory
-			destination && buildSSHCommand(`mkdir -p ${chimeraProjectTrunk}${destination}`),
-			// Then, generated rsync command
-			rsyncCommand.join(' ')
-		]
+		if (options.dryRun) {
+			console.log(destinationCommand);
+			console.log(rsyncCommand);
+		}
+
+		return [ source, destinationCommand, rsyncCommand ]
 	}
 
 	// ------------------------------------------------------------------------- SEND FILES
@@ -248,17 +258,20 @@ module.exports.chimeraPush = async function( options )
 	// ------------------------------------------------------------------------- CHIMERA SEQUENCE
 
 	// ---- STOP CONTAINER
-	const stopLoader = printLoaderLine(`Stopping container`)
-	try {
-		await execAsync( buildSSHCommand(`cd ${remoteChimeraHome}; ./chimera-project-stop.sh ${chimeraProjectTrunk}`) )
+	if (!options.dryRun) {
+		const stopLoader = printLoaderLine(`Stopping container`)
+		try {
+			await execAsync( buildSSHCommand(`cd ${remoteChimeraHome}; ./chimera-project-stop.sh ${chimeraProjectTrunk}`) )
+		}
+		catch (e) {
+			stopLoader(`Cannot stop container`, 'error')
+			fatalError( e )
+		}
+		stopLoader(`Stopped container`)
 	}
-	catch (e) {
-		stopLoader(`Cannot stop container`, 'error')
-		fatalError( e )
-	}
-	stopLoader(`Stopped container`)
 
 	// ---- TRANSFER ROOT FILES
+	options.dryRun && console.log(imageFiles)
 	await execTransferCommands([
 		// Upload root files
 		buildRsyncCommand( rootFiles ),
@@ -272,36 +285,40 @@ module.exports.chimeraPush = async function( options )
 	);
 
 	// ---- INSTALL CONTAINER
-	const installLoader = printLoaderLine(`Installing container`)
-	try {
-		const installArgumentList = [
-			//    1            2                3                     4                  5
-			projectTrunk, projectKeep, relativeChimeraKeep, dockerComposeFilePath, projectPrefix,
-			// 6, 7, 8 ...
-			...options.keep
-		]
-		const installArguments = installArgumentList.filter(v => v).join(' ')
-		await execAsync( buildSSHCommand(`cd ${remoteChimeraHome}; ./chimera-project-install.sh ${installArguments}`))
+	if (!options.dryRun) {
+		const installLoader = printLoaderLine(`Installing container`)
+		try {
+			const installArgumentList = [
+				//    1            2                3                     4                  5
+				projectTrunk, projectKeep, relativeChimeraKeep, dockerComposeFilePath, projectPrefix,
+				// 6, 7, 8 ...
+				...options.keep
+			]
+			const installArguments = installArgumentList.filter(v => v).join(' ')
+			await execAsync( buildSSHCommand(`cd ${remoteChimeraHome}; ./chimera-project-install.sh ${installArguments}`))
+		}
+		catch (e) {
+			installLoader(`Cannot install container`, 'error')
+			fatalError( e )
+		}
+		installLoader(`Container installed`)
 	}
-	catch (e) {
-		installLoader(`Cannot install container`, 'error')
-		fatalError( e )
-	}
-	installLoader(`Container installed`)
 
 	// ---- BUILD CONTAINER
-	const buildLoader = printLoaderLine(`Building container`)
-	try {
-		await execAsync( buildSSHCommand(`cd ${remoteChimeraHome}; ./chimera-project-build.sh ${projectTrunk}`))
+	if (!options.dryRun) {
+		const buildLoader = printLoaderLine(`Building container`)
+		try {
+			await execAsync( buildSSHCommand(`cd ${remoteChimeraHome}; ./chimera-project-build.sh ${projectTrunk}`))
+		}
+		catch (e) {
+			buildLoader(`Cannot build container`, 'error')
+			fatalError( e )
+		}
+		buildLoader(`Container built`)
 	}
-	catch (e) {
-		buildLoader(`Cannot build container`, 'error')
-		fatalError( e )
-	}
-	buildLoader(`Container built`)
 
 	// ---- AFTER SCRIPTS
-	if ( options.afterScripts.length > 0 ) {
+	if ( options.afterScripts.length > 0 && !options.dryRun ) {
 		const afterScriptsLoader = printLoaderLine(`Executing after scripts`)
 		options.debug && console.log( options.afterScripts )
 		try {
@@ -315,25 +332,34 @@ module.exports.chimeraPush = async function( options )
 	}
 
 	// ---- PATCH RW RIGHTS
-	const patchRightsLoader = printLoaderLine(`Patching R/W rights`)
-	options.debug && console.log( options.afterScripts )
-	try {
-		await execAsync( buildSSHCommand(`cd ${remoteChimeraHome}; ./chimera-project-patch-rights.sh ${projectRoot}`), true )
+	if (!options.dryRun) {
+		const patchRightsLoader = printLoaderLine(`Patching R/W rights`)
+		options.debug && console.log( options.afterScripts )
+		try {
+			await execAsync( buildSSHCommand(`cd ${remoteChimeraHome}; ./chimera-project-patch-rights.sh ${projectRoot}`), true )
+		}
+		catch (e) {
+			patchRightsLoader(`Patching R/W right failed`, 'error')
+			fatalError( e )
+		}
+		patchRightsLoader(`R/W rights patched`)
 	}
-	catch (e) {
-		patchRightsLoader(`Patching R/W right failed`, 'error')
-		fatalError( e )
-	}
-	patchRightsLoader(`R/W rights patched`)
 
 	// ---- START CONTAINER
-	const startedLoader = printLoaderLine(`Starting container ${projectPrefix}`)
-	try {
-		await execAsync( buildSSHCommand(`cd ${remoteChimeraHome}; ./chimera-project-start.sh ${projectTrunk}`))
+	if (!options.dryRun) {
+		const startedLoader = printLoaderLine(`Starting container ${projectPrefix}`)
+		try {
+			await execAsync( buildSSHCommand(`cd ${remoteChimeraHome}; ./chimera-project-start.sh ${projectTrunk}`))
+		}
+		catch (e) {
+			startedLoader(`Cannot start container`, 'error')
+			fatalError( e )
+		}
+		startedLoader(`Started container ${projectPrefix}`, 'success')
 	}
-	catch (e) {
-		startedLoader(`Cannot start container`, 'error')
-		fatalError( e )
-	}
-	startedLoader(`Started container ${projectPrefix}`, 'success')
+}
+
+
+module.exports = {
+	chimeraPush,
 }
