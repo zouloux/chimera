@@ -79,7 +79,13 @@ function parseContainerList ( buffer )
 
 async function getContainerList ( onlyProjects = false )
 {
-	const containerListBuffer = await execAsync(`docker ps`)
+	let containerListBuffer
+	try {
+		containerListBuffer = await execAsync(`docker ps`)
+	}
+	catch ( e ) {
+		nicePrint(`{b/r}${e}`, { code: 1 })
+	}
 	let containers = parseContainerList( containerListBuffer )
 	if ( onlyProjects )
 		containers = containers.filter( container => container.isProject )

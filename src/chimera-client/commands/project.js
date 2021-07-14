@@ -48,7 +48,7 @@ async function start ( cliArguments, cliOptions )
 
 	let loaderLine = printLoaderLine(`Building ${project.config.project}`)
 	try {
-		await execAsync(`docker-compose -f ${dockerFile} build --force-recreate`, 0, { cwd })
+		await execAsync(`docker-compose -f ${dockerFile} build`, 0, { cwd })
 	} catch (e) {
 		loaderLine(`Error while building docker project`)
 		console.error( e )
@@ -57,7 +57,7 @@ async function start ( cliArguments, cliOptions )
 	loaderLine(`Docker project built`);
 
 	try {
-		execAsync(`docker-compose -f ${dockerFile} up --no-build --abort-on-container-exit`, 3, { cwd })
+		execAsync(`docker-compose -f ${dockerFile} up --no-build --abort-on-container-exit --force-recreate`, 3, { cwd })
 	} catch (e) {
 		nicePrint(`{b/r}An error occurred inside docker VM.`)
 		console.error( e )
@@ -152,8 +152,8 @@ async function exec ()
 
 async function sync ()
 {
-	// TODO
-	console.log('SYNC')
+	const { projectSync } = require('./project-sync')
+	await projectSync();
 }
 
 // ----------------------------------------------------------------------------- EXPORTS API
