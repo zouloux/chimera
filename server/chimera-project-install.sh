@@ -23,6 +23,9 @@ echo "" >> .env
 echo "COMPOSE_PROJECT_NAME=$projectPrefix" >> .env
 echo "CHIMERA_KEEP=$relativeChimeraKeep" >> .env
 
+# Replace all instances of $COMPOSE_PROJECT_NAME in .env
+sed -i "s/\$COMPOSE_PROJECT_NAME/$projectPrefix/" .env
+
 # Go back to chimera home
 cd -
 
