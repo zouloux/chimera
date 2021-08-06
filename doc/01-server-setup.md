@@ -79,12 +79,12 @@ Can also be something like `*.chimera.domain-name.com A SERVER_IP`
    ( [more info](https://marcincuber.medium.com/lets-encrypt-generating-wildcard-ssl-certificate-using-certbot-ae1c9484c101) )
    Proposed method, can be any other certificate installation method or challenge.
    Replace `YOUR_EMAIL`, `DOMAIN_NAME` and follow instructions.
-   `certbot certonly --manual \
+   ```certbot certonly --manual \
    --preferred-challenges=dns \
    --email YOUR_EMAIL \
    --server https://acme-v02.api.letsencrypt.org/directory \
    --agree-tos \
-   -d "*.DOMAIN_NAME"`
+   -d "*.DOMAIN_NAME"```
 
 #### Install chimera server
 
