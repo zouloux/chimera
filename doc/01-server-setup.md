@@ -182,7 +182,7 @@ also renew certbot SSL certificate if needed.
 - Create a log directory into home folder : `mkdir ~/logs`.
 - Go to crontab with `crontab -e`.
 - Call maintenance script once a week and save to a log file.
-    - Ex : `* 3 * * 0 /root/chimera/maintenance-cron.sh > /root/logs/maintenance-cron.log`
+    - Ex : `0 3 * * 0 /root/chimera/maintenance-cron.sh > /root/logs/maintenance-cron.log 2>&1`
     - This example is for every sunday on 3am.
     - Note that your home directory can change depending on installation.
     - Always test script (run `/root/chimera/maintenance-cron.sh > /root/logs/maintenance-cron.log` and update crontab if something goes wrong.)
