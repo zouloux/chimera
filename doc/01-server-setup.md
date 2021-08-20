@@ -79,12 +79,18 @@ Can also be something like `*.chimera.domain-name.com A SERVER_IP`
    ( [more info](https://marcincuber.medium.com/lets-encrypt-generating-wildcard-ssl-certificate-using-certbot-ae1c9484c101) )
    Proposed method, can be any other certificate installation method or challenge.
    Replace `YOUR_EMAIL`, `DOMAIN_NAME` and follow instructions.
-   ```certbot certonly --manual \
-   --preferred-challenges=dns \
-   --email YOUR_EMAIL \
+   ```
+   certbot certonly --manual \
+   --preferred-challenges dns-01 \
+   --email 'YOUR_EMAIL' \
    --server https://acme-v02.api.letsencrypt.org/directory \
    --agree-tos \
-   -d "*.DOMAIN_NAME"```
+   -d '*.DOMAIN_NAME'
+   ```
+
+### Important note about wildcard domains
+Wildcard domains *can't* be validated with http challenge ([for now](https://community.letsencrypt.org/t/wildcard-certificates-and-http-challenge/102060)).
+This is why we use *dns-01* challenge in this example. DNS challenge means it can't be automated without a plugin which set a TXT entry into your hosting provider DNS configuration. Search if a [DNS Certbot plugin](https://certbot.eff.org/docs/using.html#dns-plugins) exists for your hosting provider and install / configure it. Without this, *crontab will not be able to automatically renew your wildcard certificate*.
 
 #### Install chimera server
 
