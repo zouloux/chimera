@@ -10,11 +10,17 @@ const { File, FileFinder } = require( "@solid-js/files" );
  *
  * TODO - V1
  * - Synchroniser avec une branche autre que master -> CHIMERA_SYNC_FILE_ROOT=/root/project/keep/*, automatique sur chimera
+ * - Proposer la possibilité de supprimer le chimera-sync.sql
+ * - Proposer la possibilité de garder X version de chimera-sync.sql avec dates, dans un dossier
  *
  * TODO - Moins important
  * - Sync files distant to distant, avec prompt ?
  * - Ajouter une option dans .env CHIMERA_SYNC_NO_CONFIRM pour éviter la confirmation où il faut retaper le nom de l'env
  */
+
+// ----------------------------------------------------------------------------- CONFIG
+
+const backupFilePath = 'chimera-sync.sql'
 
 // ----------------------------------------------------------------------------- UTILS
 
@@ -28,10 +34,6 @@ const parseHostPort = (host, defaultPort) => {
 		port: split.length >= 2 ? parseInt( split[1], 10 ) : defaultPort
 	}
 }
-
-// ----------------------------------------------------------------------------- CONFIG
-
-const backupFilePath = 'chimera-sync.sql'
 
 // ----------------------------------------------------------------------------- PROJECT SYNC METHOD
 

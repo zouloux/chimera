@@ -81,6 +81,18 @@ CLICommands.add('service', async (cliArguments, cliOptions, commandName) => {
 	})
 })
 
+
+// ----------------------------------------------------------------------------- UNINSTALL
+
+CLICommands.add('uninstall', async (cliArguments, cliOptions, commandName) => {
+	printUsingVersion()
+	checkReady()
+	nicePrint(`{b/r}WARNING : All services data (including Databases) will be destroyed. `)
+	const sure = await askList('Are you sure ?', ['No', 'No', 'Yes', 'No', 'No'], { returnType: 'value' });
+	if ( sure === 'Yes' )
+		require('./commands/_uninstall')
+})
+
 // ----------------------------------------------------------------------------- START
 
 // TODO -> Help
