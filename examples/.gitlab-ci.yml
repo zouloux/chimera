@@ -1,0 +1,103 @@
+
+# ------------------------------------------------------------------------------ CONFIG
+
+variables:
+  BRANCH: $CI_COMMIT_REF_NAME
+  GIT_SUBMODULE_STRATEGY: recursive
+
+# Docker image with : Ubuntu 20 / Node 12 / NPM 6 / PHP 8.0 / Composer
+# https://hub.docker.com/r/misterio92/ci-php-node/dockerfile
+image:
+  name: misterio92/ci-php-node
+
+# Keep those files between builds
+cache:
+  key: "$CI_BUILD_REF_NAME"
+  paths:
+    ### Root project cache folders
+    - .composer-cache
+    #- .parcel-cache
+    #- .solid-cache
+    #- .cache
+    - node_modules
+    #- v8-compile-cache-0
+    ### Sub-projects specific cache folders
+    #- src/*/.parcel-cache
+    #- src/*/node_modules
+    ### Composer vendors
+    - vendor
+    ### Grav vendors
+    #- dist/vendor
+    #- dist/user/plugins/*/vendor
+    #- dist/user/themes/*/vendor
+
+stages:
+  - deploy
+
+# ------------------------------------------------------------------------------ BUILD TEMPLATE
+
+.BuildScript: &BuildScript
+  - "# --- SETUP ENV"
+  - cp ".env.$ENV" .env
+  #- cp -R "deploy/envs/$ENV/.htaccess" "dist/.htaccess"
+  - "# --- INSTALL DEPENDENCIES"
+  - npm ci
+  - composer config -g cache-dir "$(pwd)/.composer-cache"
+  - composer install --ignore-platform-reqs
+  - "# --- BUILD"
+  #- branch=$CI_COMMIT_REF_NAME npm run env $ENV
+  #- node solid build
+
+# ------------------------------------------------------------------------------ BEFORE SCRIPT
+
+# Install SSH keys before each build
+default:
+  before_script:
+    - "# --- INSTALL SSH KEYS"
+    - mkdir -p .ssh && echo -e "Host *\n\tStrictHostKeyChecking no\n\n" > ~/.ssh/config
+    - echo "-----BEGIN OPENSSH PRIVATE KEY-----" > ~/.ssh/id_rsa
+    - echo $SSH_PRIVATE | tr " " "\n" >> ~/.ssh/id_rsa
+    - echo "-----END OPENSSH PRIVATE KEY-----" >> ~/.ssh/id_rsa
+    - echo $SSH_PUBLIC > ~/.ssh/id_rsa.pub
+    - chmod 700 ~/.ssh && chmod 600 ~/.ssh/id_rsa ~/.ssh/id_rsa.pub
+    - eval $(ssh-agent -s) && ssh-add ~/.ssh/id_rsa
+
+# ------------------------------------------------------------------------------ CHIMERA DEPLOY
+
+job:deploy_chimera:
+  stage: deploy
+  # Execute this job for master and root branches
+  except:
+    - /^(.+)/(.+)$/
+    - staging
+    - production
+  variables:
+    ENV: "chimera"
+  script:
+    - *BuildScript
+    - "# --- PUSH TO CHIMERA SERVER"
+    - ./node_modules/.bin/chimera-ci push --host $CHIMERA_HOST --branch $BRANCH
+
+# ------------------------------------------------------------------------------ STAGING DEPLOY
+
+job:deploy_staging :
+  stage: deploy
+  only:
+    - staging
+  variables:
+    ENV: "staging"
+  script:
+    - *BuildScript
+    - echo "Staging job not defined"; exit 1
+
+# ------------------------------------------------------------------------------ PRODUCTION DEPLOY
+
+job:deploy_production :
+  stage: deploy
+  only:
+    - production
+  variables:
+    ENV: "production"
+  script:
+    - *BuildScript
+    - echo "Production job not defined"; exit 1

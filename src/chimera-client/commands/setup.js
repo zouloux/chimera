@@ -50,21 +50,25 @@ async function setup ()
 		nicePrint(`{b}Chimera repository is already installed.`)
 		const update = await askList(`Do you wish to update it ?`, ['yes', 'no'])
 		if ( update[0] === 0 ) {
-			const loader = printLoaderLine(`Updating Chimera repository`)
+			// const loader = printLoaderLine(`Updating Chimera repository`)
 			try {
 				await execAsync(`git pull`, 2, { cwd: resolveHome(preferences.chimeraPath) })
 			}
 			catch (e) {
-				loader(`Unable to update Chimera repository`, 'error')
+				// loader(`Unable to update Chimera repository`, 'error')
 				console.error(e);
 				process.exit(3);
 			}
-			loader(`Updated Chimera repository`)
+			// loader(`Updated Chimera repository`)
 		}
 	}
 	else {
 		// Ask where to install repo
-		const chimeraPath = await askInput(`Chimera repository needs to be cloned somewhere.`, {
+		nicePrint(`
+			Chimera repository needs to be cloned somewhere.
+			{b/o}This folder will contain services data (like Databases) and should be kept carefully.
+		`)
+		const chimeraPath = await askInput(`Please specify where to clone Chimera repository`, {
 			defaultValue: '~/chimera'
 		})
 

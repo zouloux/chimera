@@ -24,18 +24,9 @@ const { chimeraPush } = require('./commands/push')
  * 		- remove line in bash on server ?
  * - Check .chimera.yml file and throw if invalid
  * - Check if chimera server and client has compatible versions
- *
- * V1.2 - CHIMERA SYNC
- * - Sync data between local env and chimera
- * - Sync folder can be configured in .chimera.yml
- * - Can sync kept folder only ?
- * - Choose branch to sync (shared, master, my-branch ...)
- * - Direction -> up / down / (merge ?)
- * - Can sync database (merge will not work)
- *
- * V1.3 - GITLAB DELETE HOOK
- * - Stop containers and remove all data of a removed branch from gitlab
- *   https://docs.gitlab.com/ee/user/project/integrations/webhooks.html
+ * - GITLAB DELETE HOOK
+ * 		- Stop containers and remove all data of a removed branch from gitlab
+ *  	https://docs.gitlab.com/ee/user/project/integrations/webhooks.html
  */
 
 // ----------------------------------------------------------------------------- UTILS
