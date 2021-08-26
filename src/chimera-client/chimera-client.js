@@ -5,7 +5,7 @@ const { getPreferences } = require( "./commands/_common" );
 const version = require('./package.json').version
 
 // Check if this module is linked from zouloux's _framework directory ;)
-const isLinkedFromFramework = __dirname.indexOf('/_framework')
+const isLinkedFromFramework = (__dirname.indexOf('/_framework') !== -1)
 
 // Halt if module is installed locally and not linked
 if ( !require('is-installed-globally') && !isLinkedFromFramework ) {
