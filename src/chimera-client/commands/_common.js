@@ -9,7 +9,6 @@ const { File } = require('@solid-js/files')
 
 const chimeraConfigFileName = '.chimera.yml'
 
-
 // ----------------------------------------------------------------------------- PREFERENCES
 
 const preferences = new Preferences('zouloux.chimera-client', {

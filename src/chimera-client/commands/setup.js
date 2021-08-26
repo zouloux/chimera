@@ -1,5 +1,5 @@
 const { resolveHome } = require( "@solid-js/files" );
-const { askList } = require( "@solid-js/cli" );
+const { askList, printLoaderLine } = require( "@solid-js/cli" );
 const { getPreferences } = require( "./_common" );
 const { execAsync, askInput, nicePrint } = require( "@solid-js/cli" );
 const { FileFinder, Directory } = require( "@solid-js/files" );
@@ -49,8 +49,18 @@ async function setup ()
 	if ( preferences.chimeraPath ) {
 		nicePrint(`{b}Chimera repository is already installed.`)
 		const update = await askList(`Do you wish to update it ?`, ['yes', 'no'])
-		if ( update[0] === 0 )
-			await execAsync(`git pull`, 2, { cwd: resolveHome(preferences.chimeraPath) })
+		if ( update[0] === 0 ) {
+			const loader = printLoaderLine(`Updating Chimera repository`)
+			try {
+				await execAsync(`git pull`, 2, { cwd: resolveHome(preferences.chimeraPath) })
+			}
+			catch (e) {
+				loader(`Unable to update Chimera repository`, 'error')
+				console.error(e);
+				process.exit(3);
+			}
+			loader(`Updated Chimera repository`)
+		}
 	}
 	else {
 		// Ask where to install repo
@@ -65,14 +75,16 @@ async function setup ()
 		}
 
 		// Clone repo
+		const loader = printLoaderLine(`Cloning Chimera repository`)
 		try {
 			await execAsync(`git clone git@github.com:zouloux/chimera.git ${chimeraPath}`, 0)
 		}
 		catch (e) {
-			nicePrint(`{b/r}Error while cloning Chimera repository.`)
+			loader(`Unable to clone Chimera repository`, 'error')
 			console.error(e);
 			process.exit(3);
 		}
+		loader(`Cloned Chimera repository`)
 
 		preferences.chimeraPath = chimeraPath
 	}

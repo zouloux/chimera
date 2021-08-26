@@ -4,9 +4,20 @@ const { CLICommands, nicePrint, askList } = require('@solid-js/cli')
 const { getPreferences } = require( "./commands/_common" );
 const version = require('./package.json').version
 
+// Check if this module is linked from zouloux's _framework directory ;)
+const isLinkedFromFramework = __dirname.indexOf('/_framework')
+
+// Halt if module is installed locally and not linked
+if ( !require('is-installed-globally') && !isLinkedFromFramework ) {
+	nicePrint(`
+		{b/r}Chimera-client is designed to be used as a global package only.
+		{d/i}Please run: {b}npm i -g @zouloux/chimera-client
+	`, { code: 1 })
+}
+
 // ----------------------------------------------------------------------------- UTILS
 
-const printUsingVersion = () => nicePrint(`{d}Using Chimera client {b/d}v${version}`)
+const printUsingVersion = () => nicePrint(`{d}Using Chimera client {b/d}v${version}${isLinkedFromFramework ? '{/} - {b/w}linked' : ''}`)
 
 const checkReady = () => {
 	if ( getPreferences().ready ) return
@@ -20,7 +31,6 @@ async function askAction ( title, actions, cliArguments, handler )
 {
 	cliArguments[0] ??= await askList(title, actions, { returnType: 'value' });
 	const action = cliArguments[0].toLowerCase()
-
 	if ( actions.indexOf( action ) !== -1 )
 		await handler( action )
 	else
@@ -82,7 +92,7 @@ CLICommands.start( async ( commandName, error, cliArguments, cliOptions, results
 	// Show error if we asked for a command
 	commandName && nicePrint(`{r/b}Unknown command name ${commandName}.`)
 	// Show list of available commands. Only show config if not ready.
-	const availableCommands = ( !getPreferences().ready ? ['config'] : CLICommands.list() )
+	const availableCommands = ( !getPreferences().ready ? ['setup', 'config'] : CLICommands.list() )
 	const command = await askList(`Please select Chimera command`, availableCommands)
 	await CLICommands.run( command[1], cliArguments, cliOptions )
 });
