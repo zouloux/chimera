@@ -5,6 +5,11 @@ const { askList } = require( "@solid-js/cli" );
 const { nicePrint, execAsync } = require( "@solid-js/cli" );
 const { File } = require('@solid-js/files')
 
+// ----------------------------------------------------------------------------- CONSTANTS
+
+const chimeraConfigFileName = '.chimera.yml'
+
+
 // ----------------------------------------------------------------------------- PREFERENCES
 
 const preferences = new Preferences('zouloux.chimera-client', {
@@ -29,7 +34,7 @@ function browseParentsForFile ( cwd, fileName ) {
 // ----------------------------------------------------------------------------- PROJECT FILE
 
 function findProject ( allowFail = false ) {
-	const projectPath = browseParentsForFile( process.cwd(), '.chimera.yml' )
+	const projectPath = browseParentsForFile( process.cwd(), chimeraConfigFileName )
 	if ( !projectPath )
 		if ( allowFail )
 			return null
@@ -42,11 +47,14 @@ function findProject ( allowFail = false ) {
 		projectFile.load()
 		projectConfig = projectFile.yaml()
 	} catch (e) {
-		nicePrint(`{b/r}Invalid .chimera.yml file.`, { code: 5 })
+		nicePrint(`{b/r}Invalid ${chimeraConfigFileName} YAML file.`, { code: 5 })
 	}
 
 	if ( typeof projectConfig.project !== 'string' )
-		nicePrint(`{b/r}Mandatory 'project' property is missing from .chimera.yml file.`, { code: 1 })
+		nicePrint(`{b/r}Mandatory 'project' property is missing from ${chimeraConfigFileName} file.`, { code: 1 })
+
+	if ( projectConfig.sync && !Array.isArray(projectConfig.sync) )
+		nicePrint(`{b/r}sync property should be an array in ${chimeraConfigFileName}`, { code: 1 })
 
 	return {
 		root: path.dirname( projectPath ),
@@ -104,4 +112,5 @@ module.exports = {
 	findProject,
 	getContainerList,
 	taskError,
+	chimeraConfigFileName
 }
