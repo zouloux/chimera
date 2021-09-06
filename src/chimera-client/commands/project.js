@@ -42,7 +42,7 @@ function getDockerFile ( root )
 
 async function start ( cliArguments, cliOptions )
 {
-	const project = findProject()
+	const project = await findProject()
 	const cwd = project.root
 	const dockerFile = getDockerFile( project.root )
 
@@ -80,7 +80,7 @@ async function start ( cliArguments, cliOptions )
 
 async function open ()
 {
-	const project = findProject()
+	const project = await findProject()
 	require('open')(`https://${project.config.project}.chimera.localhost`)
 }
 
@@ -89,7 +89,7 @@ async function open ()
 async function exec ()
 {
 	// Find project
-	const project = findProject()
+	const project = await findProject()
 	// const container = await askContainer( false, project.config.project, true )
 	const projectName = project.config.project
 	const containerID = `project_${project.config.project}`

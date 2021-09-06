@@ -13,7 +13,7 @@ async function checkExecutable ( executableName )
 		whichExec = await execAsync(`which ${executableName}`, 0)
 	}
 	catch (e) { return false }
-	const execFile = FileFinder.find('file', whichExec)
+	const execFile = await FileFinder.find('file', whichExec)
 	return execFile.length === 1
 }
 

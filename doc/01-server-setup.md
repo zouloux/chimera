@@ -59,7 +59,10 @@ Can also be something like `*.chimera.domain-name.com A SERVER_IP`
 - `sudo apt update`
 - `sudo apt install vim`
 
-6. Optionally, install zsh and ohmyzsh
+6. Optionally, install MySQL client for faster dumps with chimera sync
+- `sudo apt-get install mysql-client`
+
+7. Optionally, install zsh and ohmyzsh
 - `sudo apt install zsh`
 - `sh -c "$(curl -fsSL https://raw.github.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"`
 

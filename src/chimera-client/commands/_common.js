@@ -21,19 +21,18 @@ function getPreferences () { return preferences }
 
 // ----------------------------------------------------------------------------- BROWSE HELPER
 
-function browseParentsForFile ( cwd, fileName ) {
-	let currentFilePath = path.join( cwd, fileName )
-	while ( FileFinder.find('file', currentFilePath).length === 0 ) {
-		currentFilePath = path.resolve( path.join( path.dirname( currentFilePath ), '../', fileName ) )
-		if ( path.dirname(currentFilePath) === '/' ) return null
+async function browseParentsForFile ( cwd, fileName ) {
+	let currentFilePath = path.join( cwd, fileName );
+	while ((await FileFinder.find('file', currentFilePath, { cwd } )).length === 0) {
+		currentFilePath = path.resolve( path.join(currentFilePath, '../../', fileName) )
 	}
 	return currentFilePath
 }
 
 // ----------------------------------------------------------------------------- PROJECT FILE
 
-function findProject ( allowFail = false ) {
-	const projectPath = browseParentsForFile( process.cwd(), chimeraConfigFileName )
+async function findProject ( allowFail = false ) {
+	const projectPath = await browseParentsForFile( process.cwd(), chimeraConfigFileName )
 	if ( !projectPath )
 		if ( allowFail )
 			return null
@@ -43,7 +42,7 @@ function findProject ( allowFail = false ) {
 	const projectFile = new File( projectPath )
 	let projectConfig
 	try {
-		projectFile.load()
+		await projectFile.load()
 		projectConfig = projectFile.yaml()
 	} catch (e) {
 		nicePrint(`{b/r}Invalid ${chimeraConfigFileName} YAML file.`, { code: 5 })

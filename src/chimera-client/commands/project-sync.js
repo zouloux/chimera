@@ -20,14 +20,14 @@ const { File, FileFinder } = require( "@solid-js/files" );
 
 // ----------------------------------------------------------------------------- CONFIG
 
-const backupFilePath = 'chimera-sync.sql'
+const mysqlBackupFileName = 'chimera-sync.sql'
 
 // ----------------------------------------------------------------------------- UTILS
 
 const getKeys = (envs, keyStart) => Object.keys( envs ).filter( t => t.indexOf(keyStart) === 0 )
 const keyfy = key => `[{[${key}]}]`
 const parseHostPort = (host, defaultPort) => {
-	if ( !host ) return { host: null }
+	if ( !host ) host = '';
 	const split = host.split(':')
 	return {
 		host: split[ 0 ],
@@ -42,20 +42,23 @@ async function projectSync ()
 	// ------------------------------------------------------------------------- FIND DOT ENVS
 
 	// Find project
-	const project = findProject()
+	const project = await findProject()
 
 	// List all dot envs
-	const dotEnvs = FileFinder.find("file", ".env*", {
+	const dotEnvs = await FileFinder.find("file", ".env*", {
 		cwd: project.root
 	})
 
 	// Missing dot env
-	if ( !dotEnvs.find( f => f.name === '.env' ) )
+	if ( !dotEnvs.find( f => f.fullName === '.env' ) )
 		nicePrint(`{b/r}.env not found.`, { code: 1 })
 
 	// Too few dot envs
 	if ( dotEnvs.length < 2 )
 		nicePrint(`{b/r}To few dot env files to sync project.`, { code: 2 })
+
+	for ( const file of dotEnvs )
+		await file.load()
 
 	// Browse dot env files
 	let dotEnvParsedConfigs = dotEnvs.map( file => {
@@ -92,15 +95,17 @@ async function projectSync ()
 				nicePrint(`{b/r}Variable {b/w}${value}{b/r} from file ${file.fullName} not found in process envs or ${file.fullName} variables.`, { code: 2 })
 			// Interpolate
 			dotEnvContent[ key ] = envProperties[ interpolatedKey ]
-		})
+		});
+
+		const isLocal = file.fullName === '.env';
 
 		// Generate clean config object
 		let parsedConfig = {
 			// Get name from dot env extension
-			name: ( file.fullName === '.env' ? 'local' : file.extension ),
+			name: ( isLocal ? 'local' : file.extension ),
 			// MySQL transfer config
 			mysql: {
-				...parseHostPort(dotEnvContent.CHIMERA_SYNC_MYSQL_HOST, 3306),
+				...parseHostPort(dotEnvContent.CHIMERA_SYNC_MYSQL_HOST ?? '', 3306),
 				user: dotEnvContent.CHIMERA_SYNC_MYSQL_USER,
 				password: dotEnvContent.CHIMERA_SYNC_MYSQL_PASSWORD,
 				database: dotEnvContent.CHIMERA_SYNC_MYSQL_DATABASE,
@@ -122,7 +127,7 @@ async function projectSync ()
 		// Detect missing keys in MySQL config node
 		let missingMySQLConfigKeys = []
 		Object.keys( parsedConfig.mysql ).map( key => {
-			if ( !parsedConfig.mysql[ key ] )
+			if ( parsedConfig.mysql[ key ] == null )
 				missingMySQLConfigKeys.push( key )
 		})
 
@@ -133,13 +138,12 @@ async function projectSync ()
 		// No MySQL config detected
 		if ( missingMySQLConfigKeys.length === 4 )
 			parsedConfig.mysql = false
-
 		// MySQL host to 127 if host is localhost
-		if ( parsedConfig.mysql.host.toLowerCase() === 'localhost' )
+		else if ( isLocal || parsedConfig.mysql.host.toLowerCase() === 'localhost' )
 			parsedConfig.mysql.host = '127.0.0.1'
 
 		// In local env, no files sync info
-		if ( parsedConfig.name === 'local' )
+		if ( isLocal )
 			parsedConfig.files = true
 		// No files config detected
 		else if ( !parsedConfig.files.host )
@@ -243,32 +247,74 @@ async function projectSync ()
 	// ------------------------------------------------------------------------- PULL DB
 
 	if ( whatToSync !== 'files' ) {
-		const loader = printLoaderLine(`Pulling DB from ${readFrom}`)
-		const options = [
+		const dumpOptions = [
 			// mandatory from MySQL 8 dump to MariaDB
 			// https://serverfault.com/questions/912162/mysqldump-throws-unknown-table-column-statistics-in-information-schema-1109
 			`--column-statistics=0`,
 			// Options
-			`--quick`, // NEW
-			//`--single-transaction --quick --lock-tables=false`,
-			// Connexion info
-			`--user=${readFromEnv.mysql.user}`,
-			`--password=${readFromEnv.mysql.password}`,
-			`--host=${readFromEnv.mysql.host}`,
-			`--port=${readFromEnv.mysql.port}`,
-			readFromEnv.mysql.database
+			`--quick`,
+			`--single-transaction`, // NEW
+			`--extended-insert`, // NEW
+			// `--lock-tables=false`,
 		]
-		// Generate and execute mysql dump command
-		const command = `mysqldump ${options.join(' ')} > ${backupFilePath}`;
-		// TODO -> verbose option
-		// console.log( command );
-		try {
-			await execAsync( command, false, { cwd: project.root } )
+
+		const loader = printLoaderLine(`Pulling DB from ${readFrom}`)
+
+		// Use only MySQL to dump in 1 longer step
+		if ( readFromEnv.mysql.host !== null && readFromEnv.mysql.host !== '' ) {
+			const options = [
+				...dumpOptions,
+				`--user=${readFromEnv.mysql.user}`,
+				`--password=${readFromEnv.mysql.password}`,
+				`--host=${readFromEnv.mysql.host}`,
+				`--port=${readFromEnv.mysql.port}`,
+				readFromEnv.mysql.database
+			]
+			// Generate and execute mysql dump command
+			const command = `mysqldump ${options.join(' ')} > ${mysqlBackupFileName}`;
+			// Execute dump command directly from server
+			try {
+				await execAsync( command, false, { cwd: project.root } )
+			}
+			catch ( e ) {
+				loader(`Unable to pull DB from ${readFrom}`, 'error')
+				console.error( e )
+				process.exit(1)
+			}
 		}
-		catch ( e ) {
-			loader(`Unable to pull DB from ${readFrom}`, 'error')
-			console.error( e )
-			process.exit(1)
+
+		// Use 2 quicker steps to download dump
+		else {
+			// Generate a uid for this dump
+			const dumpUID = project.config.project+'_'+Math.floor((Math.random() * 99999999)).toString(16)
+			// Generate and mysql dump command
+			const options = [
+				...dumpOptions,
+				`--user=${readFromEnv.mysql.user}`,
+				`--password=${readFromEnv.mysql.password}`,
+				`--host=127.0.0.1`,
+				`--port=${readFromEnv.mysql.port}`,
+				readFromEnv.mysql.database
+			]
+			const dumpDestination = `/tmp/${dumpUID}.sql`
+			const generateSSHCommand = command => `ssh ${readFromEnv.files.user}@${readFromEnv.files.host} -p ${readFromEnv.files.port} '${command}'`
+			const sshDumpCommand = generateSSHCommand(`mysqldump ${options.join(' ')} > ${dumpDestination}`)
+			const scpCommand = `scp -P ${readFromEnv.files.port} ${readFromEnv.files.user}@${readFromEnv.files.host}:${dumpDestination} ${path.join(project.root, mysqlBackupFileName)}`
+			const sshCleanCommand = generateSSHCommand(`rm ${dumpDestination}`)
+			// console.log(scpCommand)
+			try {
+				// Dump on distant server
+				await execAsync( sshDumpCommand )
+				// Download dump
+				await execAsync( scpCommand )
+				// Clean generated dump
+				await execAsync( sshCleanCommand )
+			}
+			catch (e) {
+				loader(`Unable to pull DB from ${readFrom}`, 'error')
+				console.error( e )
+				process.exit(1)
+			}
 		}
 		loader(`Pulled DB from ${readFrom}`)
 	}
@@ -278,12 +324,13 @@ async function projectSync ()
 	if ( whatToSync !== 'files' )
 	{
 		// Open freshly created backup file
-		const backupFile = new File( path.join(project.root, backupFilePath) )
-		if ( !backupFile.exists() )
-			nicePrint(`{b/r}Error while reading {b/w}${backupFilePath}{b/r} file.`, { code: 1 })
+		const backupFile = new File( path.join(project.root, mysqlBackupFileName) )
+		if ( !(await backupFile.exists()) )
+			nicePrint(`{b/r}Error while reading {b/w}${mysqlBackupFileName}{b/r} file.`, { code: 1 })
+		await backupFile.load()
 
 		// Get replacers
-		const replaceKeyStarter = 'CHIMERA_MIGRATE_MYSQL_REPLACE_'
+		const replaceKeyStarter = 'CHIMERA_SYNC_MYSQL_REPLACE_'
 		let fromEnvReplaceKeys = getKeys( readFromEnv.dotEnv, replaceKeyStarter )
 
 		// let toEnvReplaceKeys = getKeys( writeToEnv.dotEnv, replaceKeyStarter )
@@ -297,17 +344,17 @@ async function projectSync ()
 				// TODO : Verbose
 				backupFile.content( a => a.replaceAll( readFromEnv.dotEnv[ key ], keyfy(key) ) )
 			})
-			await backupFile.saveAsync()
+			await backupFile.save()
 			fromEnvReplaceKeys.map( key => {
 				// TODO : Verbose
 				backupFile.content( a => a.replaceAll( keyfy(key), writeToEnv.dotEnv[ key ] ) )
 			})
-			await backupFile.saveAsync()
+			await backupFile.save()
 			loader(`Replaced ${fromEnvReplaceKeys.length} value${fromEnvReplaceKeys.length > 1 ? 's' : ''}`)
 		}
 
 		// Patch queries
-		let patchQueryKeys = getKeys( writeToEnv.dotEnv, 'CHIMERA_MIGRATE_MYSQL_PATCH_QUERY_' )
+		let patchQueryKeys = getKeys( writeToEnv.dotEnv, 'CHIMERA_SYNC_MYSQL_PATCH_QUERY_' )
 		if ( patchQueryKeys.length > 0 ) {
 			const loader = printLoaderLine(`Patching query`)
 			patchQueryKeys.map( key => {
@@ -318,7 +365,7 @@ async function projectSync ()
 					return c
 				})
 			})
-			await backupFile.saveAsync()
+			await backupFile.save()
 			loader(`Patched query with ${patchQueryKeys.length} instruction${patchQueryKeys.length > 1 ? 's' : ''}`)
 		}
 	}
@@ -334,7 +381,7 @@ async function projectSync ()
 			`--port=${ writeToEnv.mysql.port }`,
 			writeToEnv.mysql.database
 		]
-		const command = `mysql ${ options.join( ' ' ) } < ${ backupFilePath }`
+		const command = `mysql ${ options.join( ' ' ) } < ${ mysqlBackupFileName }`
 		// TODO -> verbose option
 		// console.log( command );
 		try {
@@ -347,6 +394,7 @@ async function projectSync ()
 		}
 		loader(`Pushed DB to ${writeTo}`)
 	}
+	// process.exit();
 
 	// ------------------------------------------------------------------------- SYNC DATA
 

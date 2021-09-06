@@ -17,7 +17,7 @@ const getServicesRoot = () => resolveHome(
 
 async function getServicesList ()
 {
-	const directories = await FileFinder.listAsync( path.join(getServicesRoot(), '*') )
+	const directories = await FileFinder.list( path.join(getServicesRoot(), '*') )
 	return directories.map( directory => path.basename( directory) )
 }
 

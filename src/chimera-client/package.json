@@ -1,6 +1,6 @@
 {
 	"name": "@zouloux/chimera-client",
-	"version": "0.12.2",
+	"version": "0.13.0",
 	"description": "Command line client to manage Chimera projects.",
 	"author": "Alexis Bouhet (zouloux)",
 	"main": "./chimera-client.js",
@@ -10,7 +10,7 @@
 	"dependencies": {
 		"@solid-js/cli": "^1.6.3",
 		"@solid-js/core": "^0.4.3",
-		"@solid-js/files": "^1.2.0",
+		"@solid-js/files": "^2.1.0",
 		"is-installed-globally": "^0.4.0",
 		"is-port-reachable": "^3.0.0",
 		"open": "^8.2.1",
