@@ -106,6 +106,8 @@ async function projectSync ()
 			// MySQL transfer config
 			mysql: {
 				...parseHostPort(dotEnvContent.CHIMERA_SYNC_MYSQL_HOST ?? '', 3306),
+				pullMethod: (dotEnvContent.CHIMERA_SYNC_MYSQL_PULL_METHOD ?? 'mysql').toLowerCase(),
+				pushMethod: (dotEnvContent.CHIMERA_SYNC_MYSQL_PULL_METHOD ?? 'mysql').toLowerCase(),
 				user: dotEnvContent.CHIMERA_SYNC_MYSQL_USER,
 				password: dotEnvContent.CHIMERA_SYNC_MYSQL_PASSWORD,
 				database: dotEnvContent.CHIMERA_SYNC_MYSQL_DATABASE,
@@ -261,7 +263,7 @@ async function projectSync ()
 		const loader = printLoaderLine(`Pulling DB from ${readFrom}`)
 
 		// Use only MySQL to dump in 1 longer step
-		if ( readFromEnv.mysql.host !== null && readFromEnv.mysql.host !== '' ) {
+		if ( readFromEnv.mysql.pullMethod === 'mysql' ) {
 			const options = [
 				...dumpOptions,
 				`--user=${readFromEnv.mysql.user}`,
@@ -284,7 +286,7 @@ async function projectSync ()
 		}
 
 		// Use 2 quicker steps to download dump
-		else {
+		else if ( readFromEnv.mysql.pullMethod === 'scp' ) {
 			// Generate a uid for this dump
 			const dumpUID = project.config.project+'_'+Math.floor((Math.random() * 99999999)).toString(16)
 			// Generate and mysql dump command
@@ -301,7 +303,7 @@ async function projectSync ()
 			const sshDumpCommand = generateSSHCommand(`mysqldump ${options.join(' ')} > ${dumpDestination}`)
 			const scpCommand = `scp -P ${readFromEnv.files.port} ${readFromEnv.files.user}@${readFromEnv.files.host}:${dumpDestination} ${path.join(project.root, mysqlBackupFileName)}`
 			const sshCleanCommand = generateSSHCommand(`rm ${dumpDestination}`)
-			// console.log(scpCommand)
+
 			try {
 				// Dump on distant server
 				await execAsync( sshDumpCommand )
@@ -374,24 +376,60 @@ async function projectSync ()
 
 	if ( whatToSync !== 'files' ) {
 		const loader = printLoaderLine(`Pushing DB to ${writeTo}`)
-		const options = [
-			`--user=${ writeToEnv.mysql.user }`,
-			`--password=${ writeToEnv.mysql.password }`,
-			`--host=${ writeToEnv.mysql.host }`,
-			`--port=${ writeToEnv.mysql.port }`,
-			writeToEnv.mysql.database
-		]
-		const command = `mysql ${ options.join( ' ' ) } < ${ mysqlBackupFileName }`
-		// TODO -> verbose option
-		// console.log( command );
-		try {
-			await execAsync( command, false, { cwd: project.root } )
+
+		// Use only MySQL to push in 1 longer step
+		if ( writeToEnv.mysql.pushMethod === 'mysql' ) {
+			const options = [
+				`--user=${ writeToEnv.mysql.user }`,
+				`--password=${ writeToEnv.mysql.password }`,
+				`--host=${ writeToEnv.mysql.host }`,
+				`--port=${ writeToEnv.mysql.port }`,
+				writeToEnv.mysql.database
+			]
+			const command = `mysql ${ options.join( ' ' ) } < ${ mysqlBackupFileName }`
+			try {
+				await execAsync( command, false, { cwd: project.root } )
+			}
+			catch (e) {
+				loader(`Unable to push DB to ${writeTo}`, 'error')
+				console.error( e )
+				process.exit(1)
+			}
 		}
-		catch (e) {
-			loader(`Unable to push DB to ${writeTo}`, 'error')
-			console.error( e )
-			process.exit(1)
+		// Use 2 quicker steps to download dump
+		else if ( writeToEnv.mysql.pushMethod === 'scp' ) {
+			// Generate a uid for this dump
+			const dumpUID = project.config.project+'_'+Math.floor((Math.random() * 99999999)).toString(16)
+			// Generate and mysql dump command
+			const options = [
+				`--user=${writeToEnv.mysql.user}`,
+				`--password=${writeToEnv.mysql.password}`,
+				`--host=127.0.0.1`,
+				`--port=${writeToEnv.mysql.port}`,
+				readFromEnv.mysql.database
+			]
+			const dumpDestination = `/tmp/${dumpUID}.sql`
+			const generateSSHCommand = command => `ssh ${writeToEnv.files.user}@${writeToEnv.files.host} -p ${writeToEnv.files.port} '${command}'`
+			const sshInjectCommand = generateSSHCommand(`mysql ${ options.join( ' ' ) } < ${ dumpDestination }`)
+			const scpCommand = `scp -P ${writeToEnv.files.port} ${path.join(project.root, mysqlBackupFileName)} ${writeToEnv.files.user}@${writeToEnv.files.host}:${dumpDestination}`
+			const sshCleanCommand = generateSSHCommand(`rm ${dumpDestination}`)
+
+			try {
+				// Upload dump
+				await execAsync( scpCommand )
+				// Inject on distant server
+				await execAsync( sshInjectCommand )
+				// Clean generated dump
+				await execAsync( sshCleanCommand )
+			}
+			catch (e) {
+				loader(`Unable to push DB to ${writeTo}`, 'error')
+				console.error( e )
+				process.exit(1)
+			}
+
 		}
+
 		loader(`Pushed DB to ${writeTo}`)
 	}
 	// process.exit();
