@@ -6,7 +6,7 @@ const { printLoaderLine } = require( "@solid-js/cli" );
 const { execAsync } = require( "@solid-js/cli" );
 const { findProject } = require( "./_common" );
 const { nicePrint } = require( "@solid-js/cli" );
-const { File } = require('@solid-js/files')
+const { File, FileFinder } = require('@solid-js/files')
 
 const defaultDockerFiles = [
 	'docker-compose.chimera.yaml',
@@ -17,9 +17,7 @@ const defaultDockerFiles = [
 
 // ----------------------------------------------------------------------------- UTILS
 
-const fileExists = f => File.find( f ).length !== 0
-
-function getDockerFile ( root )
+async function getDockerFile ( root )
 {
 	let dockerComposeFilePath
 	// Get first default docker file available
@@ -34,7 +32,7 @@ function getDockerFile ( root )
 		)
 		defaultDockerFileIndex ++
 	}
-	while ( !fileExists(dockerComposeFilePath) )
+	while ( !await FileFinder.exists(dockerComposeFilePath) )
 	return dockerComposeFilePath
 }
 
@@ -44,7 +42,7 @@ async function start ( cliArguments, cliOptions )
 {
 	const project = await findProject()
 	const cwd = project.root
-	const dockerFile = getDockerFile( project.root )
+	const dockerFile = await getDockerFile( project.root )
 
 	let loaderLine = printLoaderLine(`Building ${project.config.project}`)
 	try {
