@@ -40,7 +40,7 @@ async function start ()
 
 	await tryTask(`Generating SSL certificates for *.chimera.localhost`, async () => {
 		const certsDirectory = new Directory( path.join(serverRoot, 'core/nginx/data/certs') )
-		await certsDirectory.createAsync()
+		await certsDirectory.create()
 		await execAsync(`mkcert -key-file core/nginx/data/certs/localhost-key.pem -cert-file core/nginx/data/certs/localhost-cert.pem 'chimera.localhost' '*.chimera.localhost'`, 0, {
 			cwd: serverRoot
 		})
