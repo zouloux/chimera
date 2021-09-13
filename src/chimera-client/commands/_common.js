@@ -25,6 +25,8 @@ async function browseParentsForFile ( cwd, fileName ) {
 	let currentFilePath = path.join( cwd, fileName );
 	while ((await FileFinder.find('file', currentFilePath, { cwd } )).length === 0) {
 		currentFilePath = path.resolve( path.join(currentFilePath, '../../', fileName) )
+		if ( path.dirname(currentFilePath) === '/' )
+			return null
 	}
 	return currentFilePath
 }
