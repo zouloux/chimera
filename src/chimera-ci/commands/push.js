@@ -90,9 +90,9 @@ async function chimeraPush ( options )
 			imageFiles.push( imagePath )
 		}
 		// Do not send volumes if have some paths defined
-		if (!sendVolumes) return
+		if (!sendVolumes) continue
 		// Parse volumes to get what to send and what to keep
-		if (!service.volumes) return
+		if (!service.volumes) continue
 		service.volumes.map( volume => {
 			// Only mapped volumes
 			if ( volume.indexOf(':') === -1 ) return
