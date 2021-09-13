@@ -79,6 +79,10 @@ async function projectSync ()
 			...dotEnvContent,
 		}
 
+		// Disabled env
+		if ( 'CHIMERA_SYNC_DISABLED' in dotEnvContent && parseBoolean(dotEnvContent.CHIMERA_SYNC_DISABLED) )
+			return;
+
 		// Interpolate simple variables in dot env
 		// Will only work with 1:1 variable interpolation, which means value needs to start by $
 		// ex : CHIMERA_SYNC_MYSQL_HOST=$DB_HOST will interpolate
@@ -134,7 +138,7 @@ async function projectSync ()
 		})
 
 		// We have some mysql sync properties, but not all mandatory properties
-		if ( missingMySQLConfigKeys.length !== 0 )
+		if ( missingMySQLConfigKeys.length !== 0 && missingMySQLConfigKeys.length !== 3 )
 			nicePrint(`{b/r}Missing mysql sync propert${missingMySQLConfigKeys.length > 1 ? 'ies' : 'y'} ${missingMySQLConfigKeys.join(", ")} in file ${file.fullName}`, { code : 1 })
 
 		// No MySQL config detected

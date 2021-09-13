@@ -44,7 +44,17 @@ async function start ( cliArguments, cliOptions )
 	const cwd = project.root
 	const dockerFile = await getDockerFile( project.root )
 
-	let loaderLine = printLoaderLine(`Building ${project.config.project}`)
+	let loaderLine = printLoaderLine(`Killing current ${project.config.project}`)
+	try {
+		await execAsync(`docker-compose -f ${dockerFile} down --remove-orphans`, 0, { cwd })
+	} catch (e) {
+		loaderLine(`Error while killing docker project`)
+		console.error( e )
+		process.exit( 1 )
+	}
+	loaderLine(`Killed project`)
+
+	loaderLine = printLoaderLine(`Building ${project.config.project}`)
 	try {
 		await execAsync(`docker-compose -f ${dockerFile} build`, 0, { cwd })
 	} catch (e) {
@@ -54,18 +64,22 @@ async function start ( cliArguments, cliOptions )
 	}
 	loaderLine(`Docker project built`);
 
-	try {
-		execAsync(`docker-compose -f ${dockerFile} up --no-build --abort-on-container-exit --force-recreate`, 3, { cwd })
-	} catch (e) {
-		nicePrint(`{b/r}An error occurred inside docker VM.`)
-		console.error( e )
-		process.exit( 1 )
-	}
+	// Exec async but do not await to listen process kills
+	execAsync(`docker-compose -f ${dockerFile} up --no-build --abort-on-container-exit --force-recreate`, 3, {
+		cwd,
+		detached: false
+	}).catch( e => {} ) // catch to avoid node uncaught promise errors
 
 	onProcessKilled( async () => {
-		//const closeLine = printLoaderLine(`Stopping  ${project.config.project}`)
-		await execAsync(`docker-compose -f ${dockerFile} down --remove-orphans`, 2, { cwd })
-		//closeLine(`${project.config.project} stopped.`);
+		await delay(1)
+		const closeLine = printLoaderLine(`Stopping  ${project.config.project}`)
+		try {
+			await execAsync(`docker-compose -f ${dockerFile} down --remove-orphans`, 0, { cwd })
+		}
+		catch ( e ) {
+			console.error(e);
+		}
+		closeLine(`${project.config.project} stopped.`);
 	})
 
 	if ( cliOptions.open || cliOptions.O ) {
