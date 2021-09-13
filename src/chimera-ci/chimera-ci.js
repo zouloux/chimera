@@ -61,8 +61,8 @@ CLICommands.add('push', async (cliArguments, cliOptions, commandName) => {
 
 	// Load options from .chimera.yml file
 	const chimeraConfigFile = new File('.chimera.yml')
-	if ( chimeraConfigFile.exists() ) {
-		chimeraConfigFile.load()
+	if ( await chimeraConfigFile.exists() ) {
+		await chimeraConfigFile.load()
 		try {
 			const configOptions = chimeraConfigFile.yaml()
 			// Remove options which are only for cli

@@ -26,8 +26,6 @@ const defaultDockerFiles = [
 	'docker-compose.yml',
 ]
 
-const fileExists = f => File.find( f ).length !== 0
-
 async function chimeraPush ( options )
 {
 	// ------------------------------------------------------------------------- PREPARE OPTIONS
@@ -36,7 +34,7 @@ async function chimeraPush ( options )
 	let dockerComposeFilePath = options.dockerFile
 
 	// Check if specified docker file exists
-	if ( dockerComposeFilePath && !fileExists(dockerComposeFilePath) )
+	if ( dockerComposeFilePath && !FileFinder.existsSync(dockerComposeFilePath) )
 		nicePrint(`{r/b}Specified docker compose file {b}${dockerComposeFilePath}{/r} not found.`, { code: 4 })
 
 	// Get first default docker file available
@@ -49,21 +47,21 @@ async function chimeraPush ( options )
 		dockerComposeFilePath = defaultDockerFiles[ defaultDockerFileIndex ]
 		defaultDockerFileIndex ++
 	}
-	while ( !fileExists(dockerComposeFilePath) )
+	while ( !FileFinder.existsSync(dockerComposeFilePath) )
 
 	// Files to transfer
 	const rootFiles = [ options.env, dockerComposeFilePath ]
 	const imageFiles = [];
 
 	// Check dot env
-	if ( File.find(options.env).length === 0 )
+	if ( (await File.find(options.env)).length === 0 )
 		nicePrint(`{r/b}Env file {b}${options.env}{/r} not found.`, { code: 5 })
 
 	// Load docker compose
 	const dockerComposeFile = new File( dockerComposeFilePath )
 	let dockerComposeContent
 	try {
-		dockerComposeFile.load()
+		await dockerComposeFile.load()
 		dockerComposeContent = dockerComposeFile.yaml()
 	}
 	catch (e) {
@@ -74,7 +72,7 @@ async function chimeraPush ( options )
 	const sendVolumes = !(options.paths && options.paths.length > 0)
 
 	// Browse docker services
-	Object.keys( dockerComposeContent.services ).map( serviceName => {
+	for ( const serviceName of Object.keys( dockerComposeContent.services ) ) {
 		const service = dockerComposeContent.services[ serviceName ]
 		// Get docker compose services images to build
 		if ( 'build' in service ) {
@@ -85,7 +83,7 @@ async function chimeraPush ( options )
 			else if ( 'context' in service.build && typeof service.build.context === 'string' )
 				imagePath = service.build.context
 			// Check if directory exists and add
-			if ( !imagePath || Directory.find( imagePath ).length === 0 )
+			if ( !imagePath || (await Directory.find( imagePath )).length === 0 )
 				nicePrint(`
 					{r/n}Cannot find image {b}${imagePath}{/r} in docker service {b}${serviceName}
 				`, { code: 7 })
@@ -108,7 +106,7 @@ async function chimeraPush ( options )
 					leading(localPart.split('}')[1], false, '/')
 				)
 		})
-	})
+	}
 
 	// Remove all relative start (./)
 	// Remove all trailing slashes
@@ -188,7 +186,7 @@ async function chimeraPush ( options )
 			f = trailing(f, false, '/')
 			// Remove file from list if does not exists
 			// FIXME : strict mode which warn or halt ?
-			if ( FileFinder.list( f ).length === 0 ) return null
+			if ( FileFinder.existsSync( f ) ) return null
 			// Resolve file path relative to project root
 			f = path.relative( options.cwd, path.resolve(f) )
 			// Compute destination directory, only compatible with filePath with 1 path
