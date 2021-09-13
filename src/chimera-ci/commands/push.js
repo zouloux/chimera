@@ -186,7 +186,7 @@ async function chimeraPush ( options )
 			f = trailing(f, false, '/')
 			// Remove file from list if does not exists
 			// FIXME : strict mode which warn or halt ?
-			if ( FileFinder.existsSync( f ) ) return null
+			if ( !FileFinder.existsSync( f ) ) return null
 			// Resolve file path relative to project root
 			f = path.relative( options.cwd, path.resolve(f) )
 			// Compute destination directory, only compatible with filePath with 1 path
