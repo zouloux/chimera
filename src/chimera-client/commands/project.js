@@ -102,19 +102,22 @@ async function open ()
 		const dotEnv = new File(path.join(project.root, '.env'))
 		await dotEnv.load()
 		const data = dotEnv.dotEnv()
-		projectName = data.COMPOSE_PROJECT_NAME ?? ''
+		projectName = data.COMPOSE_HOSTNAME ?? 'default'
 	}
 	catch (e) {}
 
-	let url = `https://${projectName}.localhost`;
-
+	let url;
 	if ( projectName.trim().toLowerCase() === 'default' ) {
 		// Get hostname and halt if not possible
 		let hostname = await execAsync('hostname')
 		hostname = hostname.trim()
 		url = `https://${hostname}.local`
 	}
+	else {
+		url = `https://${projectName}.localhost`;
+	}
 
+	nicePrint(`{d}Opening {b/w}${url}`)
 	require('open')(url)
 }
 
