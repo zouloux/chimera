@@ -16,7 +16,7 @@ server
     location /
     {
         # Use docker resolver so $services becomes container IP
-        resolver 127.0.0.11 ipv6=off valid=60s;
+        resolver 127.0.0.11 valid=60s;
 
         # Force to get service from .chimera network to avoid being a huge proxy for everyone
         set $target http://$service.chimera:80;
