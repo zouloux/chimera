@@ -19,7 +19,8 @@ cd "$projectTrunk"
 mv $dockerComposePath docker-compose.yaml > /dev/null 2>&1
 
 # Inject compose project name and chimera keep into dot env
-echo "" >> .env
+echo "" >> .env; echo "" >> .env;
+echo "# ------------------------------------------------------------------------------ COMPOSE & CHIMERA" >> .env
 echo "COMPOSE_PROJECT_NAME=$projectPrefix" >> .env
 echo "COMPOSE_NAME=$projectPrefix" >> .env
 echo "COMPOSE_HOSTNAME=$projectPrefix" >> .env
