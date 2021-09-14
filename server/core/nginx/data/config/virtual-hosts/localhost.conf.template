@@ -6,9 +6,8 @@ server
     server_name ~^(?<service>[a-zA-Z0-9\_\-]+)\.chimera.localhost;
     add_header X-service "$service";
 
-    #access_log "/var/log/nginx/$service-access.log";
-    access_log off;
-    error_log  "/var/log/nginx/$service-error.log";
+    # Error logs
+    error_log  "/var/log/nginx/localhost-error.log";
 
     # Redirect all queries
     location /
@@ -29,7 +28,9 @@ server
     # Enable HTTP and HTTPS with mkcert certificates
     # https://github.com/FiloSottile/mkcert
     listen 80;
+    listen [::]:80;
     listen 443 ssl;
+    listen [::]:443 ssl;
     ssl_certificate /etc/certs/localhost-cert.pem;
     ssl_certificate_key /etc/certs/localhost-key.pem;
 }

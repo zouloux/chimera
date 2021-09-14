@@ -12,6 +12,9 @@ server {
     ssl_certificate /etc/letsencrypt/live/DOMAIN_NAME/fullchain.pem;
     ssl_certificate_key /etc/letsencrypt/live/DOMAIN_NAME/privkey.pem;
 
+    # Error logs
+    error_log  "/var/log/nginx/default-error.log";
+
     # Everything is a 404
     location / {
         return 404;

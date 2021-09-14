@@ -6,9 +6,11 @@ server
     server_name ~^(?<service>[a-zA-Z0-9\_\-]+)\.sub-domain\.domain\-name\.com$;
     add_header X-service "$service";
 
-    #access_log "/var/log/nginx/$service-access.log";
-    access_log off;
+    # Error logs
     error_log  "/var/log/nginx/$service-error.log";
+
+    # Expand body size for uploads
+    client_max_body_size 3g;
 
     # Redirect all queries
     location /
@@ -25,7 +27,9 @@ server
 
     # Enable HTTP and HTTPS with shared certbot certificates
     listen 80;
+    listen [::]:80;
     listen 443 ssl;
+    listen [::]:443 ssl;
     ssl_certificate /etc/letsencrypt/live/DOMAIN_NAME/fullchain.pem;
     ssl_certificate_key /etc/letsencrypt/live/DOMAIN_NAME/privkey.pem;
 }
