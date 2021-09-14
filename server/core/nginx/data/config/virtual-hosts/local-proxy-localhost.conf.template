@@ -3,11 +3,11 @@ server
 {
     # Capture all sub-domains as service and inject service name as header
     # https://nginx.viraptor.info/
-    server_name ~^(?<service>[a-zA-Z0-9\_\-]+)\.chimera.localhost;
+    server_name ~^(?<service>[a-zA-Z0-9\_\-]+)\.localhost;
     add_header X-service "$service";
 
     # Error logs
-    error_log  "/var/log/nginx/localhost-error.log";
+    error_log "/var/log/nginx/localhost-error.log";
 
     # Redirect all queries
     location /
@@ -31,6 +31,6 @@ server
     listen [::]:80;
     listen 443 ssl;
     listen [::]:443 ssl;
-    ssl_certificate /etc/certs/localhost-cert.pem;
-    ssl_certificate_key /etc/certs/localhost-key.pem;
+    ssl_certificate /etc/certs/local-proxy-localhost-cert.pem;
+    ssl_certificate_key /etc/certs/local-proxy-localhost-key.pem;
 }

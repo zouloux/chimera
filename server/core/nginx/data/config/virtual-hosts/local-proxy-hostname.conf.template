@@ -1,0 +1,31 @@
+
+server
+{
+    # Error logs
+    error_log  "/var/log/nginx/hostname-error.log";
+
+    # Redirect all queries
+    location /
+    {
+        # Use docker resolver so $services becomes container IP
+        resolver 127.0.0.11 valid=60s;
+
+        # Force to get service from .chimera network to avoid being a huge proxy for everyone
+        set $target http://default.chimera:80;
+
+        # Proxy to this target
+        proxy_pass $target;
+    }
+
+    # Disable stapling on auto-signed certificates
+    ssl_stapling off;
+
+    # Enable HTTP and HTTPS with mkcert certificates
+    # https://github.com/FiloSottile/mkcert
+    listen 80;
+    listen [::]:80;
+    listen 443 ssl;
+    listen [::]:443 ssl;
+    ssl_certificate /etc/certs/local-proxy-hostname-cert.pem;
+    ssl_certificate_key /etc/certs/local-proxy-hostname-key.pem;
+}

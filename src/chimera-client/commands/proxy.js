@@ -32,18 +32,31 @@ async function start ()
 			portNotAvailable(443)
 	}, taskError)
 
+	const serverCWD = { cwd: serverRoot }
+
 	await tryTask(`Enabling configs`, async () => {
-		await execAsync(`cp core/nginx/data/config/virtual-hosts/localhost.conf.template core/nginx/data/config/virtual-hosts/localhost.conf`, 0, {
-			cwd: serverRoot
-		})
+		const configPath = 'core/nginx/data/config/virtual-hosts/';
+		const makeCopyConfigCommand = (name) =>
+			`cp ${configPath}${name}.conf.template ${configPath}${name}.conf`
+
+		await execAsync(makeCopyConfigCommand('local-proxy-hostname'), 0, serverCWD)
+		await execAsync(makeCopyConfigCommand('local-proxy-localhost'), 0, serverCWD)
 	}, taskError)
 
-	await tryTask(`Generating SSL certificates for *.chimera.localhost`, async () => {
+	// Get public mdns hostname
+	// TODO : Fail safe ? How does it behave on windows / linux ?
+	let hostname = await execAsync(`hostname`)
+	hostname = hostname.trim() + '.local'
+
+	await tryTask(`Generating SSL certificates for ${hostname} and localhost`, async () => {
 		const certsDirectory = new Directory( path.join(serverRoot, 'core/nginx/data/certs') )
 		await certsDirectory.create()
-		await execAsync(`mkcert -key-file core/nginx/data/certs/localhost-key.pem -cert-file core/nginx/data/certs/localhost-cert.pem 'chimera.localhost' '*.chimera.localhost'`, 0, {
-			cwd: serverRoot
-		})
+		const certsPath = "core/nginx/data/certs/"
+		const makeMkCertCommand = (fileName, domain) =>
+			`mkcert -key-file ${certsPath}${fileName}-key.pem -cert-file ${certsPath}${fileName}-cert.pem '${domain}' '*.${domain}'`;
+
+		await execAsync(makeMkCertCommand('hostname', hostname), 0, serverCWD);
+		await execAsync(makeMkCertCommand('localhost', 'localhost'), 0, serverCWD);
 	}, taskError)
 
 	await tryTask(`Starting Nginx container`, async () => {
