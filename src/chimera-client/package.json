@@ -1,6 +1,6 @@
 {
 	"name": "@zouloux/chimera-client",
-	"version": "0.14.0",
+	"version": "0.14.1",
 	"description": "Command line client to manage Chimera projects.",
 	"author": "Alexis Bouhet (zouloux)",
 	"main": "./chimera-client.js",

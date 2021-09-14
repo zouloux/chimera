@@ -93,7 +93,29 @@ async function start ( cliArguments, cliOptions )
 async function open ()
 {
 	const project = await findProject()
-	require('open')(`https://${project.config.project}.chimera.localhost`)
+
+	let projectName = project.config.project
+
+	try {
+		// Read dot env in project root and try to guess if declared
+		// as default or with a name
+		const dotEnv = new File(path.join(project.root, '.env'))
+		await dotEnv.load()
+		const data = dotEnv.dotEnv()
+		projectName = data.COMPOSE_PROJECT_NAME ?? ''
+	}
+	catch (e) {}
+
+	let url = `https://${projectName}.localhost`;
+
+	if ( projectName.trim().toLowerCase() === 'default' ) {
+		// Get hostname and halt if not possible
+		let hostname = await execAsync('hostname')
+		hostname = hostname.trim()
+		url = `https://${hostname}.local`
+	}
+
+	require('open')(url)
 }
 
 // ----------------------------------------------------------------------------- EXEC

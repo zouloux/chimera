@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-const { CLICommands, nicePrint, askList } = require('@solid-js/cli')
+const { CLICommands, nicePrint, askList, execAsync, askInput } = require('@solid-js/cli')
 const { getPreferences } = require( "./commands/_common" );
 const version = require('./package.json').version
 
@@ -82,6 +82,20 @@ CLICommands.add('service', async (cliArguments, cliOptions, commandName) => {
 })
 
 
+// ----------------------------------------------------------------------------- CLEAN
+
+CLICommands.add('clean', async (cliArguments, cliOptions, commandName) => {
+	printUsingVersion()
+	checkReady()
+	nicePrint(`{b/r}WARNING : All stopped containers, dangling images, and orphan volumes will be destroyed.`)
+	const sure = await askList('Are you sure ?', ['No', 'Yes'], { returnType: 'value' });
+	if ( sure === 'Yes' ) {
+		await execAsync(`docker image prune -a -f`, 3);
+		await execAsync(`docker container prune -f`, 3);
+		await execAsync(`docker system prune -f`, 3);
+	}
+})
+
 // ----------------------------------------------------------------------------- UNINSTALL
 
 CLICommands.add('uninstall', async (cliArguments, cliOptions, commandName) => {
@@ -89,8 +103,15 @@ CLICommands.add('uninstall', async (cliArguments, cliOptions, commandName) => {
 	checkReady()
 	nicePrint(`{b/r}WARNING : All services data (including Databases) will be destroyed. `)
 	const sure = await askList('Are you sure ?', ['No', 'No', 'Yes', 'No', 'No'], { returnType: 'value' });
-	if ( sure === 'Yes' )
-		require('./commands/_uninstall')
+	if ( sure !== 'Yes' ) return
+	nicePrint(`
+		{b/r}Again, you'll lose all database and data not saved to another folder.
+		You can copy this directory before uninstall : ${getPreferences().chimeraPath}
+	`)
+	const sentence = "destroy"
+	const verySure = await askInput(`Type : "${sentence}" to confirm and uninstall chimera.`);
+	if ( verySure !== sentence ) return;
+	require('./commands/_uninstall')
 })
 
 // ----------------------------------------------------------------------------- START
