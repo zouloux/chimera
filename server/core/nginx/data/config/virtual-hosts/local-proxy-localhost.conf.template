@@ -31,6 +31,6 @@ server
     listen [::]:80;
     listen 443 ssl;
     listen [::]:443 ssl;
-    ssl_certificate /etc/certs/local-proxy-localhost-cert.pem;
-    ssl_certificate_key /etc/certs/local-proxy-localhost-key.pem;
+    ssl_certificate /etc/certs/localhost-cert.pem;
+    ssl_certificate_key /etc/certs/localhost-key.pem;
 }
