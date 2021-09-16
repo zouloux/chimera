@@ -44,17 +44,9 @@ async function start ( cliArguments, cliOptions )
 	const cwd = project.root
 	const dockerFile = await getDockerFile( project.root )
 
-	let loaderLine = printLoaderLine(`Killing current ${project.config.project}`)
-	try {
-		await execAsync(`docker-compose -f ${dockerFile} down --remove-orphans`, 0, { cwd })
-	} catch (e) {
-		loaderLine(`Error while killing docker project`)
-		console.error( e )
-		process.exit( 1 )
-	}
-	loaderLine(`Killed project`)
+	await stop(cliArguments, cliOptions)
 
-	loaderLine = printLoaderLine(`Building ${project.config.project}`)
+	let loaderLine = printLoaderLine(`Building ${project.config.project}`)
 	try {
 		await execAsync(`docker-compose -f ${dockerFile} build`, 0, { cwd })
 	} catch (e) {
@@ -86,6 +78,39 @@ async function start ( cliArguments, cliOptions )
 		await delay(2)
 		await open()
 	}
+}
+
+// ----------------------------------------------------------------------------- STOP
+
+async function stop ( cliArguments, cliOptions )
+{
+	const project = await findProject()
+	const cwd = project.root
+	const dockerFile = await getDockerFile( project.root )
+
+	let loaderLine = printLoaderLine(`Stopping current ${project.config.project}`)
+	try {
+		await execAsync(`docker-compose -f ${dockerFile} down --remove-orphans`, 0, { cwd })
+	} catch (e) {
+		loaderLine(`Error while stopping docker project`)
+		console.error( e )
+		process.exit( 1 )
+	}
+	loaderLine(`Stopped project`)
+}
+
+// ----------------------------------------------------------------------------- ATTACH
+
+async function attach ( cliArguments, cliOptions )
+{
+	const project = await findProject()
+	const cwd = project.root
+	const dockerFile = await getDockerFile( project.root )
+
+	// Exec async but do not await to listen process kills
+	execAsync(`docker logs --follow project_${project.config.project}`, 3, {
+		detached: false
+	}).catch( e => {} ) // catch to avoid node uncaught promise errors
 }
 
 // ----------------------------------------------------------------------------- OPEN
@@ -197,6 +222,8 @@ async function sync ()
 
 module.exports = {
 	start,
+	stop,
+	attach,
 	open,
 	exec,
 	sync,

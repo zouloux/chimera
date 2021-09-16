@@ -56,6 +56,8 @@ async function findProject ( allowFail = false ) {
 	if ( projectConfig.sync && !Array.isArray(projectConfig.sync) )
 		nicePrint(`{b/r}sync property should be an array in ${chimeraConfigFileName}`, { code: 1 })
 
+	nicePrint(`{d}Currently in {w/b}${projectConfig.project}`)
+
 	return {
 		root: path.dirname( projectPath ),
 		config: projectConfig,

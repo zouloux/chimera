@@ -64,7 +64,7 @@ CLICommands.add('proxy', async (cliArguments, cliOptions, commandName) => {
 CLICommands.add('project', async (cliArguments, cliOptions, commandName) => {
 	printUsingVersion()
 	checkReady()
-	askAction(`Action on project`, [ 'start', 'open', 'exec', 'sync' ], cliArguments, action => {
+	askAction(`Action on project`, [ 'start', 'stop', 'attach', 'open', 'exec', 'sync' ], cliArguments, action => {
 		require('./commands/project')[ action ]( cliArguments, cliOptions )
 	})
 }, {
