@@ -44,7 +44,7 @@ async function start ( cliArguments, cliOptions )
 	const cwd = project.root
 	const dockerFile = await getDockerFile( project.root )
 
-	await stop(cliArguments, cliOptions)
+	await stop(cliArguments, cliOptions, project)
 
 	let loaderLine = printLoaderLine(`Building ${project.config.project}`)
 	try {
@@ -82,9 +82,9 @@ async function start ( cliArguments, cliOptions )
 
 // ----------------------------------------------------------------------------- STOP
 
-async function stop ( cliArguments, cliOptions )
+async function stop ( cliArguments, cliOptions, project = null )
 {
-	const project = await findProject()
+	project ??= await findProject()
 	const cwd = project.root
 	const dockerFile = await getDockerFile( project.root )
 
@@ -152,7 +152,6 @@ async function exec ()
 {
 	// Find project
 	const project = await findProject()
-	// const container = await askContainer( false, project.config.project, true )
 	const projectName = project.config.project
 	const containerID = `project_${project.config.project}`
 
