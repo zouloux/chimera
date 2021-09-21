@@ -129,8 +129,8 @@ async function chimeraPush ( options )
 	// ------------------------------------------------------------------------- BUILD COMMANDS
 
 	// Path to project and binaries
-	const remoteChimeraHome = trailing(options.home ?? `~/chimera/`, true)
-	let projectRoot = trailing(options.projectRoot ?? `projects/`, true)
+	const remoteChimeraHome = trailing(options.home ? options.home : `~/chimera/`, true)
+	let projectRoot = trailing(options.projectRoot ? options.projectRoot : `projects/`, true)
 	projectRoot += `${options.project}/${options.branch}/`
 	const projectKeep = `${projectRoot}keep/`
 	const projectTrunk = `${projectRoot}trunk/`
