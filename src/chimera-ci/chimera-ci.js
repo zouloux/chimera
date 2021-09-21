@@ -125,7 +125,7 @@ CLICommands.add('push', async (cliArguments, cliOptions, commandName) => {
 		options.host = options.user + '@' + options.host
 		delete options.user
 	}
-
+	
 	// Execute push
 	await chimeraPush( options )
 }, {

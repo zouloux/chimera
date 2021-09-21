@@ -89,8 +89,6 @@ async function chimeraPush ( options )
 				`, { code: 7 })
 			imageFiles.push( imagePath )
 		}
-		// Do not send volumes if have some paths defined
-		if (!sendVolumes) continue
 		// Parse volumes to get what to send and what to keep
 		if (!service.volumes) continue
 		service.volumes.map( volume => {
@@ -98,7 +96,7 @@ async function chimeraPush ( options )
 			if ( volume.indexOf(':') === -1 ) return
 			const localPart = volume.split(':')[0]
 			// Get volumes to send, only when starting with ./
-			if ( localPart.indexOf('./') === 0 )
+			if ( sendVolumes && localPart.indexOf('./') === 0 )
 				options.paths.push( localPart )
 			// Get kept volumes
 			if ( localPart.indexOf('${'+chimeraKeepVariableName) !== -1 )
