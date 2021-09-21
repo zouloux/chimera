@@ -129,8 +129,9 @@ async function chimeraPush ( options )
 	// ------------------------------------------------------------------------- BUILD COMMANDS
 
 	// Path to project and binaries
-	const remoteChimeraHome = `~/chimera/`
-	const projectRoot = `projects/${options.project}/${options.branch}/`
+	const remoteChimeraHome = trailing(options.home ?? `~/chimera/`, true)
+	let projectRoot = trailing(options.projectRoot ?? `projects/`, true)
+	projectRoot += `${options.project}/${options.branch}/`
 	const projectKeep = `${projectRoot}keep/`
 	const projectTrunk = `${projectRoot}trunk/`
 	const relativeChimeraKeep = path.relative(projectTrunk, projectKeep)
@@ -153,7 +154,11 @@ async function chimeraPush ( options )
 
 	// Build a command to be executed on Chimera server
 	const buildSSHCommand = ( sshCommand ) => {
-		const command = `ssh ${port ? `-p ${port}` : ''} -o StrictHostKeyChecking=no ${options.host} "${sshCommand}"`
+		// Prepend with sshpass if not using ssh key
+		let command = '';
+		if ( options.password )
+			command += `sshpass -p '${options.password}' `
+		command += `ssh ${port ? `-p ${port}` : ''} -o StrictHostKeyChecking=no ${options.host} "${sshCommand}"`
 		options.debug && console.log('> '+command)
 		return command
 	}
@@ -222,6 +227,10 @@ async function chimeraPush ( options )
 		rsyncCommand.push(`${source} ${options.host}:${chimeraProjectTrunk}${destination}`)
 		rsyncCommand = rsyncCommand.join(' ')
 
+		// Prepend with sshpass if not using ssh key
+		if ( options.password )
+			rsyncCommand = `sshpass -p '${options.password}' ` + rsyncCommand
+
 		if (options.dryRun) {
 			console.log(destinationCommand);
 			console.log(rsyncCommand);
@@ -256,7 +265,7 @@ async function chimeraPush ( options )
 	// ------------------------------------------------------------------------- CHIMERA SEQUENCE
 
 	// ---- STOP CONTAINER
-	if (!options.dryRun) {
+	if (!options.dryRun && !options.noDocker) {
 		const stopLoader = printLoaderLine(`Stopping container`)
 		try {
 			await execAsync( buildSSHCommand(`cd ${remoteChimeraHome}; ./chimera-project-stop.sh ${chimeraProjectTrunk}`) )
@@ -303,7 +312,7 @@ async function chimeraPush ( options )
 	}
 
 	// ---- BUILD CONTAINER
-	if (!options.dryRun) {
+	if (!options.dryRun && !options.noDocker) {
 		const buildLoader = printLoaderLine(`Building container`)
 		try {
 			await execAsync( buildSSHCommand(`cd ${remoteChimeraHome}; ./chimera-project-build.sh ${projectTrunk}`))
@@ -344,7 +353,7 @@ async function chimeraPush ( options )
 	}
 
 	// ---- START CONTAINER
-	if (!options.dryRun) {
+	if (!options.dryRun && !options.noDocker) {
 		const startedLoader = printLoaderLine(`Starting container ${projectPrefix}`)
 		try {
 			await execAsync( buildSSHCommand(`cd ${remoteChimeraHome}; ./chimera-project-start.sh ${projectTrunk}`))

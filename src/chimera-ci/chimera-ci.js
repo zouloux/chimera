@@ -31,7 +31,10 @@ const { chimeraPush } = require('./commands/push')
 
 // ----------------------------------------------------------------------------- UTILS
 
-const printUsingVersion = () => nicePrint(`{d}Using Chimera CI {b/d}v${require('./package.json').version}`)
+// Check if this module is linked from zouloux's _framework directory ;)
+const isLinkedFromFramework = (__dirname.indexOf('/_framework') !== -1)
+
+const printUsingVersion = () => nicePrint(`{d}Using Chimera CI {b/d}v${require('./package.json').version}${isLinkedFromFramework ? '{/} - {b/w}linked' : ''}`)
 
 // Inject some value into an array which is on an object.
 // Will merge arrays if value is an array.
@@ -77,10 +80,15 @@ CLICommands.add('push', async (cliArguments, cliOptions, commandName) => {
 	}
 
 	// Override with cli options and arguments
-	if ( cliOptions.project ) 		options.project = cliOptions.project
-	if ( cliOptions.host )			options.host = cliOptions.host
-	if ( cliOptions.branch )		options.branch = cliOptions.branch
-	if ( cliOptions.dockerFile )	options.dockerFile = cliOptions.dockerFile
+	if ( cliOptions.project ) 			options.project = cliOptions.project
+	if ( cliOptions.host )				options.host = cliOptions.host
+	if ( cliOptions.user )				options.user = cliOptions.user
+	if ( cliOptions.password )			options.password = cliOptions.password
+	if ( cliOptions.branch )			options.branch = cliOptions.branch
+	if ( cliOptions.home )				options.home = cliOptions.home
+	if ( cliOptions['docker-file'] )	options.dockerFile = cliOptions['docker-file']
+	if ( cliOptions['docker'] === false )			options.noDocker = !cliOptions['docker']
+	if ( cliOptions['project-root'] )	options.projectRoot = cliOptions['project-root']
 
 	if ( cliOptions.afterScript )	multiInject(options, 'afterScripts', cliOptions.afterScript)
 	if ( cliOptions.path )			multiInject(options, 'paths', cliOptions.path)
@@ -112,14 +120,19 @@ CLICommands.add('push', async (cliArguments, cliOptions, commandName) => {
 	// Project root, do not use process.cwd which can be wrong
 	options.cwd = path.resolve('.')
 
+	// Prepend user to host directly
+	if ( options.user ) {
+		options.host = options.user + '@' + options.host
+		delete options.user
+	}
+
 	// Execute push
 	await chimeraPush( options )
 }, {
 	host	: null,
 	project	: null,
 	env		: '.env',
-	branch	: 'master',
-	dryRun	: false
+	branch	: 'master'
 })
 
 // ----------------------------------------------------------------------------- DELETE
