@@ -134,6 +134,7 @@ async function chimeraPush ( options )
 	const projectTrunk = `${projectRoot}trunk/`
 	const relativeChimeraKeep = path.relative(projectTrunk, projectKeep)
 	const chimeraProjectTrunk = `${remoteChimeraHome}${projectTrunk}`
+	const chimeraProjectKeep = `${remoteChimeraHome}${projectKeep}`
 
 	// Project prefix for internal network and container identifying
 	const projectPrefix = (
@@ -214,6 +215,10 @@ async function chimeraPush ( options )
 		let rsyncCommand = [`rsync`, `-r -z -t -4 --delete --exclude '**/.DS_Store'`];
 
 		options.dryRun && rsyncCommand.push(`-v --dry-run`);
+
+		// Exclude keep folders
+		if ( options.keep )
+			rsyncCommand.push( options.keep.map( k => `--exclude '${chimeraProjectKeep}${trailing(k, false)}/**'`).join(' ') )
 
 		// Add exclude
 		if ( options.exclude && options.exclude.length > 0 )
