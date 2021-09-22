@@ -203,7 +203,13 @@ async function chimeraPush ( options )
 
 		// Generate rsync command
 		// FIXME : Publish .bin files ?
-		let rsyncCommand = [`rsync`, `-r -z -u -t --delete --exclude '**/.DS_Store'`];
+		// http://www.delafond.org/traducmanfr/man/man1/rsync.1.html
+		// -r : Recursive
+		// -z : Compress
+		// REMOVED // -u : Update, override destination file only if its date is not more recent
+		// -t : Sync file update times
+		// --delete : Remove all files in destination that are not present anymore
+		let rsyncCommand = [`rsync`, `-r -z -t --delete --exclude '**/.DS_Store'`];
 
 		options.dryRun && rsyncCommand.push(`-v --dry-run`);
 
@@ -219,7 +225,7 @@ async function chimeraPush ( options )
 		const source = fileList.join(' ')
 
 		// Generate destination command
-		const destinationCommand = destination && buildSSHCommand(`mkdir -p ${chimeraProjectTrunk}${destination}`)
+		const destinationCommand = buildSSHCommand(`mkdir -p ${chimeraProjectTrunk}${destination}`)
 
 		// Generate rsync command
 		rsyncCommand.push(`${source} ${options.host}:${chimeraProjectTrunk}${destination}`)
@@ -292,11 +298,14 @@ async function chimeraPush ( options )
 	// ---- INSTALL CONTAINER
 	if (!options.dryRun) {
 		const installLoader = printLoaderLine(`Installing container`)
+		const createSymLinks = options.noDocker ? 'symlinks' : 'skip'
 		try {
 			const installArgumentList = [
-				//    1            2                3                     4                  5
-				projectTrunk, projectKeep, relativeChimeraKeep, dockerComposeFilePath, projectPrefix,
-				// 6, 7, 8 ...
+				//    1            2                3
+				projectTrunk, projectKeep, relativeChimeraKeep,
+				//       4                  5               6
+				dockerComposeFilePath, projectPrefix, createSymLinks,
+				// 7, 8, 9 ...
 				...options.keep
 			]
 			const installArguments = installArgumentList.filter(v => v).join(' ')
