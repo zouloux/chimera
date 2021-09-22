@@ -209,17 +209,20 @@ async function chimeraPush ( options )
 		// -z : Compress
 		// REMOVED // -u : Update, override destination file only if its date is not more recent
 		// -t : Keep file times
-		// -K : --keep-dirlinks This option causes the receiving side to treat a symlink to a directory as though it were a real directory, but only if it matches a real directory from the sender. Without this option, the receiver's symlink would be deleted and replaced with a real directory.
+		// REMOVED // -K : --keep-dirlinks This option causes the receiving side to treat a symlink to a directory as though it were a real directory, but only if it matches a real directory from the sender. Without this option, the receiver's symlink would be deleted and replaced with a real directory.
 		// -4 : Prefer IPV4
 		// --delete : Remove all files in destination that are not present anymore
 
-		let rsyncCommand = [`rsync`, `-r -z -t -K -4 ${noDelete ? '' : '--delete'} --exclude '**/.DS_Store'`];
+		let rsyncCommand = [`rsync`, `-r -z -t -4 ${noDelete ? '' : '--delete'} --exclude '**/.DS_Store'`];
 
 		options.dryRun && rsyncCommand.push(`-v --dry-run`);
 
 		// Exclude keep folders
-		if ( options.keep )
-			rsyncCommand.push( options.keep.map( k => `--exclude '${chimeraProjectKeep}${trailing(k, false)}/**'`).join(' ') )
+		if ( options.keep ) {
+			options.dryRun && console.log('keep', options.keep)
+			// rsyncCommand.push( options.keep.map( k => `--exclude '${chimeraProjectKeep}${trailing(k, false)}/**'`).join(' ') )
+			rsyncCommand.push( options.keep.map( k => `--exclude '${trailing(k, false)}/**'`).join(' ') )
+		}
 
 		// Add exclude
 		if ( options.exclude && options.exclude.length > 0 )
@@ -262,8 +265,8 @@ async function chimeraPush ( options )
 				if ( transferBlock.length === 1 )
 					transferLoader(`Skipped ${name}`)
 				else {
-					transferBlock[1] && await execAsync( transferBlock[1] )
-					transferBlock[2] && await execAsync( transferBlock[2] )
+					transferBlock[1] && await execAsync( transferBlock[1], options.dryRun ? 3 : null )
+					transferBlock[2] && await execAsync( transferBlock[2], options.dryRun ? 3 : null )
 					transferLoader(`Sent ${name}`)
 				}
 			}
