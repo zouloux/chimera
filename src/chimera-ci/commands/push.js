@@ -176,7 +176,7 @@ async function chimeraPush ( options )
 	 */
 
 	// Build rsync command to synchronise files and directories
-	const buildRsyncCommand = ( filePath ) => {
+	const buildRsyncCommand = ( filePath, noDelete = false ) => {
 		// Destination directory to be pre-created
 		let destination = ''
 
@@ -212,7 +212,7 @@ async function chimeraPush ( options )
 		// -4 : Prefer IPV4
 		// --delete : Remove all files in destination that are not present anymore
 
-		let rsyncCommand = [`rsync`, `-r -z -t -4 --delete --exclude '**/.DS_Store'`];
+		let rsyncCommand = [`rsync`, `-r -z -t -4 ${noDelete ? '' : '--delete'} --exclude '**/.DS_Store'`];
 
 		options.dryRun && rsyncCommand.push(`-v --dry-run`);
 
@@ -291,8 +291,8 @@ async function chimeraPush ( options )
 	// ---- TRANSFER ROOT FILES
 	options.dryRun && console.log(imageFiles)
 	await execTransferCommands([
-		// Upload root files
-		buildRsyncCommand( rootFiles ),
+		// Upload root files (no delete)
+		buildRsyncCommand( rootFiles, true ),
 		// Upload docker image files
 		...imageFiles.map( buildRsyncCommand ),
 	])
