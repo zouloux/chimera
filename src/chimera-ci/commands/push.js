@@ -212,8 +212,9 @@ async function chimeraPush ( options )
 		// REMOVED // -K : --keep-dirlinks This option causes the receiving side to treat a symlink to a directory as though it were a real directory, but only if it matches a real directory from the sender. Without this option, the receiver's symlink would be deleted and replaced with a real directory.
 		// -4 : Prefer IPV4
 		// --delete : Remove all files in destination that are not present anymore
+		// --delete-after : Remove all files in destination that are not present anymore
 
-		let rsyncCommand = [`rsync`, `-r -z -t -4 ${noDelete ? '' : '--delete'} --exclude '**/.DS_Store'`];
+		let rsyncCommand = [`rsync`, `-r -z -t -4 ${noDelete ? '' : '--delete --delete-after'} --exclude '**/.DS_Store'`];
 
 		options.dryRun && rsyncCommand.push(`-v --dry-run`);
 
@@ -221,7 +222,7 @@ async function chimeraPush ( options )
 		if ( options.keep ) {
 			options.dryRun && console.log('keep', options.keep)
 			// rsyncCommand.push( options.keep.map( k => `--exclude '${chimeraProjectKeep}${trailing(k, false)}/**'`).join(' ') )
-			rsyncCommand.push( options.keep.map( k => `--exclude '${trailing(k, false)}/**'`).join(' ') )
+			rsyncCommand.push( options.keep.map( k => `--exclude '${k}'`).join(' ') )
 		}
 
 		// Add exclude
