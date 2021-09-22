@@ -207,9 +207,11 @@ async function chimeraPush ( options )
 		// -r : Recursive
 		// -z : Compress
 		// REMOVED // -u : Update, override destination file only if its date is not more recent
-		// -t : Sync file update times
+		// -t : Keep file times
+		// -4 : Prefer IPV4
 		// --delete : Remove all files in destination that are not present anymore
-		let rsyncCommand = [`rsync`, `-r -z -t --delete --exclude '**/.DS_Store'`];
+
+		let rsyncCommand = [`rsync`, `-r -z -t -4 --delete --exclude '**/.DS_Store'`];
 
 		options.dryRun && rsyncCommand.push(`-v --dry-run`);
 

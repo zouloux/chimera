@@ -142,7 +142,7 @@ async function projectSync ()
 			nicePrint(`{b/r}Missing mysql sync propert${missingMySQLConfigKeys.length > 1 ? 'ies' : 'y'} ${missingMySQLConfigKeys.join(", ")} in file ${file.fullName}`, { code : 1 })
 
 		// No MySQL config detected
-		if ( missingMySQLConfigKeys.length === 4 )
+		if ( missingMySQLConfigKeys.length === 3 )
 			parsedConfig.mysql = false
 		// MySQL host to 127 if host is localhost
 		else if ( isLocal || parsedConfig.mysql.host.toLowerCase() === 'localhost' )
@@ -216,8 +216,8 @@ async function projectSync ()
 	if ( project.config.sync && !writeToEnv.files )
 		nicePrint(missingSyncFileHostTemplate(writeToEnv.fileName), { code: 1 })
 
-	// Ask what to sync, only if we can sync some files or some database
 	let whatToSync = 'all'
+	// Ask what to sync, only if we can sync some files or some database
 	if ( project.config.sync && !readFromEnv.mysql )
 		whatToSync = 'files'
 	else if ( !project.config.sync && readFromEnv.mysql )
@@ -469,9 +469,16 @@ async function projectSync ()
 				sshCommand += ' -p '+remoteEnv.port;
 
 			// Generate rsync command
+			// http://www.delafond.org/traducmanfr/man/man1/rsync.1.html
+			// -q : quiet
+			// -r : recursive
+			// -t : keep file times
+			// -4 : Prefer IPV4
+			// --delete : Remove all files in destination that are not present anymore
+			// REMOVED // -c : use checksum, not date or size
 			let rsyncCommands = [
 				`rsync -e "${ sshCommand }"`,
-				`-qrtc -4 --delete --progress`
+				`-q -r -t -4 --delete`
 			]
 
 			// Generate remote part
