@@ -121,6 +121,7 @@ async function projectSync ()
 				...parseHostPort(dotEnvContent.CHIMERA_SYNC_FILE_HOST, 2002),
 				user: dotEnvContent.CHIMERA_SYNC_FILE_USER ?? 'root',
 				root: dotEnvContent.CHIMERA_SYNC_FILE_ROOT ?? `~/chimera/projects/${project.config.project}/master/keep`,
+				usePassword: parseBoolean(dotEnvContent.CHIMERA_SYNC_FILE_USE_PASSWORD)
 			},
 			// Parse boolean for allow read and allow write
 			read: parseBoolean( dotEnvContent.CHIMERA_SYNC_ALLOW_READ ),
@@ -264,6 +265,11 @@ async function projectSync ()
 			// `--lock-tables=false`,
 		]
 
+		// Ask for password
+		let scpPassword = ''
+		if ( readFromEnv.mysql.pushMethod === 'scp' && readFromEnv.usePassword )
+			scpPassword = await askInput(`${readFrom} password :`, { notEmpty: true })
+
 		const loader = printLoaderLine(`Pulling DB from ${readFrom}`)
 
 		// Use only MySQL to dump in 1 longer step
@@ -303,7 +309,8 @@ async function projectSync ()
 				readFromEnv.mysql.database
 			]
 			const dumpDestination = `/tmp/${dumpUID}.sql`
-			const generateSSHCommand = command => `ssh ${readFromEnv.files.user}@${readFromEnv.files.host} -p ${readFromEnv.files.port} '${command}'`
+			const sshPass = readFromEnv.usePassword ? `sshpass -p '${scpPassword}' ` : '';
+			const generateSSHCommand = command => `${sshPass}ssh ${readFromEnv.files.user}@${readFromEnv.files.host} -p ${readFromEnv.files.port} '${command}'`
 			const sshDumpCommand = generateSSHCommand(`mysqldump ${options.join(' ')} > ${dumpDestination}`)
 			const scpCommand = `scp -P ${readFromEnv.files.port} ${readFromEnv.files.user}@${readFromEnv.files.host}:${dumpDestination} ${path.join(project.root, mysqlBackupFileName)}`
 			const sshCleanCommand = generateSSHCommand(`rm ${dumpDestination}`)
@@ -379,6 +386,11 @@ async function projectSync ()
 	// ------------------------------------------------------------------------- PUSH DB
 
 	if ( whatToSync !== 'files' ) {
+		// Ask for password
+		let scpPassword = ''
+		if ( writeToEnv.mysql.pushMethod === 'scp' && writeToEnv.usePassword )
+			scpPassword = await askInput(`${writeTo} password :`, { notEmpty: true })
+
 		const loader = printLoaderLine(`Pushing DB to ${writeTo}`)
 
 		// Use only MySQL to push in 1 longer step
@@ -413,7 +425,8 @@ async function projectSync ()
 				readFromEnv.mysql.database
 			]
 			const dumpDestination = `/tmp/${dumpUID}.sql`
-			const generateSSHCommand = command => `ssh ${writeToEnv.files.user}@${writeToEnv.files.host} -p ${writeToEnv.files.port} '${command}'`
+			const sshPass = writeToEnv.usePassword ? `sshpass -p '${scpPassword}' ` : '';
+			const generateSSHCommand = command => `${sshPass}ssh ${writeToEnv.files.user}@${writeToEnv.files.host} -p ${writeToEnv.files.port} '${command}'`
 			const sshInjectCommand = generateSSHCommand(`mysql ${ options.join( ' ' ) } < ${ dumpDestination }`)
 			const scpCommand = `scp -P ${writeToEnv.files.port} ${path.join(project.root, mysqlBackupFileName)} ${writeToEnv.files.user}@${writeToEnv.files.host}:${dumpDestination}`
 			const sshCleanCommand = generateSSHCommand(`rm ${dumpDestination}`)
