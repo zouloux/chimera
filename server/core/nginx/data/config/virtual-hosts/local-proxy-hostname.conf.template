@@ -2,7 +2,7 @@
 server
 {
     # Error logs
-    error_log  "/var/log/nginx/hostname-error.log";
+    #error_log  "/var/log/nginx/hostname-error.log";
 
     # Redirect all queries
     location /
