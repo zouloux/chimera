@@ -7,7 +7,7 @@ server
     add_header X-service "$service";
 
     # Error logs
-    error_log  "/var/log/nginx/$service-error.log";
+    #error_log  "/var/log/nginx/$service-error.log";
 
     # Expand body size for uploads
     client_max_body_size 3g;
