@@ -476,6 +476,14 @@ async function projectSync ()
 
 		// console.log({ remoteEnv, syncMode })
 
+		// Ask for password
+		let scpPassword = ''
+		if ( readFromEnv.files.usePassword )
+			scpPassword = await askInput(`${readFrom} password :`, { notEmpty: true })
+		else if ( writeToEnv.files.usePassword )
+			scpPassword = await askInput(`${writeTo} password :`, { notEmpty: true })
+
+
 		for ( const syncPath of project.config.sync )
 		{
 			// Generate SSH command with port
@@ -492,6 +500,7 @@ async function projectSync ()
 			// --delete : Remove all files in destination that are not present anymore
 			// REMOVED // -c : use checksum, not date or size
 			let rsyncCommands = [
+				scpPassword ? `sshpass -p '${scpPassword}' ` : '',
 				`rsync -e "${ sshCommand }"`,
 				`-q -r -t -4 --delete`
 			]
