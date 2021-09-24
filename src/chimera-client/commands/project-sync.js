@@ -118,7 +118,7 @@ async function projectSync ()
 			},
 			// File transfer config
 			files: {
-				...parseHostPort(dotEnvContent.CHIMERA_SYNC_FILE_HOST, 2002),
+				...parseHostPort(dotEnvContent.CHIMERA_SYNC_FILE_HOST, 22),
 				user: dotEnvContent.CHIMERA_SYNC_FILE_USER ?? 'root',
 				root: dotEnvContent.CHIMERA_SYNC_FILE_ROOT ?? `~/chimera/projects/${project.config.project}/master/keep`,
 				usePassword: parseBoolean(dotEnvContent.CHIMERA_SYNC_FILE_USE_PASSWORD)
@@ -267,7 +267,7 @@ async function projectSync ()
 
 		// Ask for password
 		let scpPassword = ''
-		if ( readFromEnv.mysql.pushMethod === 'scp' && readFromEnv.usePassword )
+		if ( readFromEnv.mysql.pullMethod === 'scp' && readFromEnv.files.usePassword )
 			scpPassword = await askInput(`${readFrom} password :`, { notEmpty: true })
 
 		const loader = printLoaderLine(`Pulling DB from ${readFrom}`)
@@ -304,15 +304,15 @@ async function projectSync ()
 				...dumpOptions,
 				`--user=${readFromEnv.mysql.user}`,
 				`--password=${readFromEnv.mysql.password}`,
-				`--host=127.0.0.1`,
+				`--host=${readFromEnv.mysql.host}`,
 				`--port=${readFromEnv.mysql.port}`,
 				readFromEnv.mysql.database
 			]
 			const dumpDestination = `/tmp/${dumpUID}.sql`
-			const sshPass = readFromEnv.usePassword ? `sshpass -p '${scpPassword}' ` : '';
+			const sshPass = readFromEnv.files.usePassword ? `sshpass -p '${scpPassword}' ` : '';
 			const generateSSHCommand = command => `${sshPass}ssh ${readFromEnv.files.user}@${readFromEnv.files.host} -p ${readFromEnv.files.port} '${command}'`
 			const sshDumpCommand = generateSSHCommand(`mysqldump ${options.join(' ')} > ${dumpDestination}`)
-			const scpCommand = `scp -P ${readFromEnv.files.port} ${readFromEnv.files.user}@${readFromEnv.files.host}:${dumpDestination} ${path.join(project.root, mysqlBackupFileName)}`
+			const scpCommand = `${sshPass}scp -P ${readFromEnv.files.port} ${readFromEnv.files.user}@${readFromEnv.files.host}:${dumpDestination} ${path.join(project.root, mysqlBackupFileName)}`
 			const sshCleanCommand = generateSSHCommand(`rm ${dumpDestination}`)
 
 			try {
@@ -388,7 +388,7 @@ async function projectSync ()
 	if ( whatToSync !== 'files' ) {
 		// Ask for password
 		let scpPassword = ''
-		if ( writeToEnv.mysql.pushMethod === 'scp' && writeToEnv.usePassword )
+		if ( writeToEnv.mysql.pushMethod === 'scp' && writeToEnv.files.usePassword )
 			scpPassword = await askInput(`${writeTo} password :`, { notEmpty: true })
 
 		const loader = printLoaderLine(`Pushing DB to ${writeTo}`)
@@ -420,23 +420,26 @@ async function projectSync ()
 			const options = [
 				`--user=${writeToEnv.mysql.user}`,
 				`--password=${writeToEnv.mysql.password}`,
-				`--host=127.0.0.1`,
+				`--host=${writeToEnv.mysql.host}`,
 				`--port=${writeToEnv.mysql.port}`,
-				readFromEnv.mysql.database
+				writeToEnv.mysql.database
 			]
 			const dumpDestination = `/tmp/${dumpUID}.sql`
-			const sshPass = writeToEnv.usePassword ? `sshpass -p '${scpPassword}' ` : '';
+			const sshPass = writeToEnv.files.usePassword ? `sshpass -p '${scpPassword}' ` : '';
 			const generateSSHCommand = command => `${sshPass}ssh ${writeToEnv.files.user}@${writeToEnv.files.host} -p ${writeToEnv.files.port} '${command}'`
 			const sshInjectCommand = generateSSHCommand(`mysql ${ options.join( ' ' ) } < ${ dumpDestination }`)
-			const scpCommand = `scp -P ${writeToEnv.files.port} ${path.join(project.root, mysqlBackupFileName)} ${writeToEnv.files.user}@${writeToEnv.files.host}:${dumpDestination}`
+			const scpCommand = `${sshPass}scp -P ${writeToEnv.files.port} ${path.join(project.root, mysqlBackupFileName)} ${writeToEnv.files.user}@${writeToEnv.files.host}:${dumpDestination}`
 			const sshCleanCommand = generateSSHCommand(`rm ${dumpDestination}`)
 
 			try {
 				// Upload dump
+				// console.log(scpCommand);
 				await execAsync( scpCommand )
 				// Inject on distant server
+				// console.log(sshInjectCommand);
 				await execAsync( sshInjectCommand )
 				// Clean generated dump
+				// console.log(sshCleanCommand);
 				await execAsync( sshCleanCommand )
 			}
 			catch (e) {
@@ -444,7 +447,6 @@ async function projectSync ()
 				console.error( e )
 				process.exit(1)
 			}
-
 		}
 
 		loader(`Pushed DB to ${writeTo}`)
