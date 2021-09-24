@@ -214,7 +214,11 @@ async function chimeraPush ( options )
 		// --delete : Remove all files in destination that are not present anymore
 		// --delete-after : Remove all files in destination that are not present anymore
 
-		let rsyncCommand = [`rsync`, `-r -z -t -4 ${noDelete ? '' : '--delete --delete-after'} --exclude '**/.DS_Store'`];
+		let rsyncCommand = [
+			`rsync`, `-r -z -t -4`,
+			 `${(noDelete || options.noDelete) ? '' : '--delete --delete-after'}`,
+			`--exclude '**/.DS_Store'`
+		];
 
 		options.dryRun && rsyncCommand.push(`-v --dry-run`);
 
@@ -261,7 +265,7 @@ async function chimeraPush ( options )
 		for ( const transferBlock of transferCommands ) {
 			const name = transferBlock[0]
 			options.debug && console.log(transferBlock);
-			const transferLoader = printLoaderLine(`Sending ${name}`)
+			const transferLoader = printLoaderLine(`Sending ${name} ${options.noDelete ? 'without delete' : 'with delete'}`)
 			try {
 				if ( transferBlock.length === 1 )
 					transferLoader(`Skipped ${name}`)

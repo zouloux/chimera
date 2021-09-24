@@ -80,15 +80,26 @@ CLICommands.add('push', async (cliArguments, cliOptions, commandName) => {
 	}
 
 	// Override with cli options and arguments
-	if ( cliOptions.project ) 			options.project = cliOptions.project
-	if ( cliOptions.host )				options.host = cliOptions.host
-	if ( cliOptions.user )				options.user = cliOptions.user
-	if ( cliOptions.password )			options.password = cliOptions.password
-	if ( cliOptions.branch )			options.branch = cliOptions.branch
-	if ( cliOptions.home )				options.home = cliOptions.home
-	if ( cliOptions['docker-file'] )	options.dockerFile = cliOptions['docker-file']
-	if ( cliOptions['docker'] === false )			options.noDocker = !cliOptions['docker']
-	if ( cliOptions['project-root'] )	options.projectRoot = cliOptions['project-root']
+	if ( cliOptions.project )
+		options.project = cliOptions.project
+	if ( cliOptions.host )
+		options.host = cliOptions.host
+	if ( cliOptions.user )
+		options.user = cliOptions.user
+	if ( cliOptions.password )
+		options.password = cliOptions.password
+	if ( cliOptions.branch )
+		options.branch = cliOptions.branch
+	if ( cliOptions.home )
+		options.home = cliOptions.home
+	if ( cliOptions['docker-file'] )
+		options.dockerFile = cliOptions['docker-file']
+	if ( cliOptions['docker'] === false )
+		options.noDocker = !cliOptions['docker']
+	if ( cliOptions['delete'] === false )
+		options.noDelete = !cliOptions['delete']
+	if ( cliOptions['project-root'] )
+		options.projectRoot = cliOptions['project-root']
 
 	if ( cliOptions.afterScript )	multiInject(options, 'afterScripts', cliOptions.afterScript)
 	if ( cliOptions.path )			multiInject(options, 'paths', cliOptions.path)
