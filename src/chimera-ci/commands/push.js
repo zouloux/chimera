@@ -229,7 +229,7 @@ async function chimeraPush ( options )
 		const source = fileList.join(' ')
 
 		// Generate destination command
-		const destinationCommand = buildSSHCommand(`mkdir -p ${chimeraProjectTrunk}${destination}`)
+		const destinationCommand = buildSSHCommand(`mkdir -p ${chimeraProjectTrunk}${destination}`, options)
 
 		// Generate rsync command
 		rsyncCommand.push(`${source} ${options.host}:${chimeraProjectTrunk}${destination}`)
@@ -312,7 +312,7 @@ async function chimeraPush ( options )
 			...options.keep
 		]
 		const installArguments = installArgumentList.filter(v => v).join(' ')
-		command = buildSSHCommand(`cd ${options.remoteChimeraHome}; ./chimera-project-install.sh ${installArguments}`, options);;
+		command = buildSSHCommand(`cd ${options.remoteChimeraHome}; ./chimera-project-install.sh ${installArguments}`, options);
 		// Exec remote command
 		await oraExec(command, {}, {
 			text: `Installing container`,
