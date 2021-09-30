@@ -65,6 +65,7 @@ async function chimeraInstall ( options )
 			}
 			catch (e) {
 				taskUpdater.error(`Unable to download ${file}`)
+				console.error( e )
 				process.exit(1)
 			}
 		});
