@@ -1,9 +1,12 @@
 #!/usr/bin/env node
 
 const { CLICommands, nicePrint } = require('@solid-js/cli')
+const { multiInject } = require('@solid-js/core')
 const { File } = require('@solid-js/files')
 const path = require('path')
 const { chimeraPush } = require('./commands/push')
+const { chimeraInstall } = require( "./commands/install" );
+const { prepareDefaultOptions, checkProject, checkHost } = require( "./commands/_common" );
 
 // ----------------------------------------------------------------------------- RESEARCH
 
@@ -29,27 +32,34 @@ const { chimeraPush } = require('./commands/push')
  *  	https://docs.gitlab.com/ee/user/project/integrations/webhooks.html
  */
 
-// ----------------------------------------------------------------------------- UTILS
+// ----------------------------------------------------------------------------- BEFORE TASKS
 
-// Check if this module is linked from zouloux's _framework directory ;)
-const isLinkedFromFramework = (__dirname.indexOf('/_framework') !== -1)
+CLICommands.before( () => {
+	// Check if this module is linked from zouloux's _framework directory ;)
+	const isLinkedFromFramework = (__dirname.indexOf('/_framework') !== -1)
+	nicePrint(`{d}Using Chimera CI {b/d}v${require('./package.json').version}${isLinkedFromFramework ? '{/} - {b/w}linked' : ''}`)
+})
 
-const printUsingVersion = () => nicePrint(`{d}Using Chimera CI {b/d}v${require('./package.json').version}${isLinkedFromFramework ? '{/} - {b/w}linked' : ''}`)
+// ----------------------------------------------------------------------------- INSTALL
 
-// Inject some value into an array which is on an object.
-// Will merge arrays if value is an array.
-function multiInject ( object, arrayPropertyName, valueToInject ) {
-	object[ arrayPropertyName ] = [
-		...object[ arrayPropertyName ],
-		...( Array.isArray( valueToInject ) ? valueToInject : [ valueToInject ] )
-	]
-}
+CLICommands.add('install', async (cliArguments, cliOptions, commandName) => {
+	// Prepare default options
+	const options = prepareDefaultOptions( {}, cliOptions )
+
+	// Override with cli options and arguments
+	if ( cliOptions['force-update'] )
+		options.forceUpdate = cliOptions['force-update']
+
+	// Check options
+	checkHost( options )
+
+	// Execute install
+	await chimeraInstall( options );
+})
 
 // ----------------------------------------------------------------------------- CLI COMMANDS
 
 CLICommands.add('push', async (cliArguments, cliOptions, commandName) => {
-	printUsingVersion();
-
 	// Default options
 	let options = {
 		project: null,
@@ -79,19 +89,14 @@ CLICommands.add('push', async (cliArguments, cliOptions, commandName) => {
 		}
 	}
 
+	// Prepare default options
+	prepareDefaultOptions( options, cliOptions )
+
 	// Override with cli options and arguments
 	if ( cliOptions.project )
 		options.project = cliOptions.project
-	if ( cliOptions.host )
-		options.host = cliOptions.host
-	if ( cliOptions.user )
-		options.user = cliOptions.user
-	if ( cliOptions.password )
-		options.password = cliOptions.password
 	if ( cliOptions.branch )
 		options.branch = cliOptions.branch
-	if ( cliOptions.home )
-		options.home = cliOptions.home
 	if ( cliOptions['docker-file'] )
 		options.dockerFile = cliOptions['docker-file']
 	if ( cliOptions['docker'] === false )
@@ -106,36 +111,23 @@ CLICommands.add('push', async (cliArguments, cliOptions, commandName) => {
 	if ( cliOptions.keep )			multiInject(options, 'keep', cliOptions.keep)
 	if ( cliOptions.exclude )		multiInject(options, 'exclude', cliOptions.exclude)
 
-	if ( cliOptions.debug )				options.debug = true
-	if ( cliOptions['show-config'] )	options.showConfig = true
-	if ( cliOptions['dry-run'] )		options.dryRun = true
+	// Default paths are no paths
+	if ( !options.paths )
+		options.paths = []
 
+	// Get dotenv path
 	options.env = (
 		cliOptions.env.indexOf('.') === 0
 		? cliOptions.env
 		: '.env.' + cliOptions.env
 	)
 
-	// Check parameters
-	!options.host && nicePrint(`
-		{r/b}Missing {b}host{/r} parameter.
-		Specify it with {b}--host{/} option, or set it in {b}.chimera.yml{/}
-		See Chimera doc to inject configure your CI to inject $CHIMERA_HOST on all projects.
-	`, { code: 2 })
-	!options.project && nicePrint(`
-		{r/b}Missing {b}project{/r} parameter.
-		Specify it with project option like {b}chimera push --project $PROJECT{/}, or set it in {b}.chimera.yml{/}
-	`, { code: 3 })
-	if (!options.paths) options.paths = []
+	// Check options
+	checkHost( options );
+	checkProject( options )
 
 	// Project root, do not use process.cwd which can be wrong
 	options.cwd = path.resolve('.')
-
-	// Prepend user to host directly
-	if ( options.user ) {
-		options.host = options.user + '@' + options.host
-		delete options.user
-	}
 
 	// Execute push
 	await chimeraPush( options )
@@ -158,10 +150,10 @@ CLICommands.add('delete', async (cliArguments, cliOptions, commandName) => {
 
 CLICommands.start( ( commandName, error, cliArguments, cliOptions, results ) => {
 	if ( !commandName || results.length === 0 ) {
-		printUsingVersion();
 		nicePrint(`
 			{r/b}Missing command name.
 			Available commands :
+			- install
 			- push
 		`, { code: 3 })
 	}

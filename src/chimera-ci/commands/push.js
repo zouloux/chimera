@@ -2,6 +2,10 @@ const { nicePrint, execAsync, printLoaderLine } = require('@solid-js/cli')
 const { File, FileFinder, Directory } = require('@solid-js/files')
 const { trailing, leading } = require('@solid-js/core')
 const path = require('path')
+const { buildSSHCommand, prependSSHPass } = require( "@solid-js/cli/dist/Ssh" );
+const { oraExec } = require( "@solid-js/cli/dist/Ora" );
+
+// ----------------------------------------------------------------------------- UTILS
 
 function fatalError ( e = null, code = 1 ) {
 	e && console.error( e )
@@ -17,14 +21,18 @@ function processPaths ( pathsToProcess ) {
 	})
 }
 
-const chimeraKeepVariableName = 'CHIMERA_KEEP'
+// -----------------------------------------------------------------------------
 
-const defaultDockerFiles = [
+const _chimeraKeepVariableName = 'CHIMERA_KEEP'
+
+const _defaultDockerFiles = [
 	'docker-compose.chimera.yaml',
 	'docker-compose.chimera.yml',
 	'docker-compose.yaml',
 	'docker-compose.yml',
 ]
+
+// -----------------------------------------------------------------------------
 
 async function chimeraPush ( options )
 {
@@ -41,10 +49,10 @@ async function chimeraPush ( options )
 	let defaultDockerFileIndex = 0
 	do {
 		// Default docker file not found
-		if ( !(defaultDockerFileIndex in defaultDockerFiles) )
+		if ( !(defaultDockerFileIndex in _defaultDockerFiles) )
 			nicePrint(`{r/b}Docker compose file not found.`, { code: 4 })
 		// Target docker file
-		dockerComposeFilePath = defaultDockerFiles[ defaultDockerFileIndex ]
+		dockerComposeFilePath = _defaultDockerFiles[ defaultDockerFileIndex ]
 		defaultDockerFileIndex ++
 	}
 	while ( !FileFinder.existsSync(dockerComposeFilePath) )
@@ -99,7 +107,7 @@ async function chimeraPush ( options )
 			if ( sendVolumes && localPart.indexOf('./') === 0 )
 				options.paths.push( localPart )
 			// Get kept volumes
-			if ( localPart.indexOf('${'+chimeraKeepVariableName) !== -1 )
+			if ( localPart.indexOf('${'+_chimeraKeepVariableName) !== -1 )
 				options.keep.push(
 					leading(localPart.split('}')[1], false, '/')
 				)
@@ -108,8 +116,8 @@ async function chimeraPush ( options )
 
 	// Remove all relative start (./)
 	// Remove all trailing slashes
-	options.paths = processPaths( options.paths )
-	options.keep = processPaths( options.keep )
+	options.paths 	= processPaths( options.paths )
+	options.keep 	= processPaths( options.keep )
 	options.exclude = processPaths( options.exclude )
 
 	// Remove duplicates
@@ -127,14 +135,13 @@ async function chimeraPush ( options )
 	// ------------------------------------------------------------------------- BUILD COMMANDS
 
 	// Path to project and binaries
-	const remoteChimeraHome = trailing(options.home ? options.home : `~/chimera/`, true)
 	let projectRoot = trailing(options.projectRoot ? options.projectRoot : `projects/`, true)
 	projectRoot += `${options.project}/${options.branch}/`
 	const projectKeep = `${projectRoot}keep/`
 	const projectTrunk = `${projectRoot}trunk/`
 	const relativeChimeraKeep = path.relative(projectTrunk, projectKeep)
-	const chimeraProjectTrunk = `${remoteChimeraHome}${projectTrunk}`
-	const chimeraProjectKeep = `${remoteChimeraHome}${projectKeep}`
+	const chimeraProjectTrunk = `${options.remoteChimeraHome}${projectTrunk}`
+	const chimeraProjectKeep = `${options.remoteChimeraHome}${projectKeep}`
 
 	// Project prefix for internal network and container identifying
 	const projectPrefix = (
@@ -142,25 +149,6 @@ async function chimeraPush ( options )
 		? options.project
 		: `${options.project}_${options.branch}`
 	)
-
-	// Split port from chimera host to a separated variable
-	let port
-	if ( options.host.indexOf(':') !== -1 ) {
-		const split = options.host.split(':')
-		options.host = split[0]
-		port = split[1]
-	}
-
-	// Build a command to be executed on Chimera server
-	const buildSSHCommand = ( sshCommand ) => {
-		// Prepend with sshpass if not using ssh key
-		let command = '';
-		if ( options.password )
-			command += `sshpass -p '${options.password}' `
-		command += `ssh ${port ? `-p ${port}` : ''} -o StrictHostKeyChecking=no ${options.host} "${sshCommand}"`
-		options.debug && console.log('> '+command)
-		return command
-	}
 
 	/**
 	 * http://www.delafond.org/traducmanfr/man/man1/rsync.1.html
@@ -234,8 +222,8 @@ async function chimeraPush ( options )
 			rsyncCommand.push( options.exclude.map(e => `--exclude '${e}'`).join(' ') )
 
 		// Add port through SSH to command if we got a port
-		if ( port )
-			rsyncCommand.push(`-e 'ssh -p ${port}'`)
+		if ( options.port )
+			rsyncCommand.push(`-e 'ssh -p ${options.port}'`)
 
 		// Convert file path array to string
 		const source = fileList.join(' ')
@@ -248,10 +236,10 @@ async function chimeraPush ( options )
 		rsyncCommand = rsyncCommand.join(' ')
 
 		// Prepend with sshpass if not using ssh key
-		if ( options.password )
-			rsyncCommand = `sshpass -p '${options.password}' ` + rsyncCommand
+		prependSSHPass( rsyncCommand, options )
 
-		if (options.dryRun) {
+		// Dry run
+		if ( options.dryRun ) {
 			console.log(destinationCommand);
 			console.log(rsyncCommand);
 		}
@@ -282,19 +270,19 @@ async function chimeraPush ( options )
 		}
 	}
 
-	// ------------------------------------------------------------------------- CHIMERA SEQUENCE
+	// ------------------------------------------------------------------------- EXEC CHIMERA SEQUENCE
+	let command
 
 	// ---- STOP CONTAINER
 	if (!options.dryRun && !options.noDocker) {
-		const stopLoader = printLoaderLine(`Stopping container`)
-		try {
-			await execAsync( buildSSHCommand(`cd ${remoteChimeraHome}; ./chimera-project-stop.sh ${chimeraProjectTrunk}`) )
-		}
-		catch (e) {
-			stopLoader(`Cannot stop container`, 'error')
-			fatalError( e )
-		}
-		stopLoader(`Stopped container`)
+		// Build command
+		command = buildSSHCommand(`cd ${options.remoteChimeraHome}; ./chimera-project-stop.sh ${chimeraProjectTrunk}`, options)
+		// Exec remote command
+		await oraExec(command, {}, {
+			text: `Stopping container`,
+			successText: `Stopped container`,
+			errorText: `Cannot stop container`
+		})
 	}
 
 	// ---- TRANSFER ROOT FILES
@@ -313,82 +301,74 @@ async function chimeraPush ( options )
 
 	// ---- INSTALL CONTAINER
 	if (!options.dryRun) {
-		const installLoader = printLoaderLine(`Installing container`)
+		// Build command
 		const createSymLinks = options.noDocker ? 'symlinks' : 'skip'
-		try {
-			const installArgumentList = [
-				//    1            2                3
-				projectTrunk, projectKeep, relativeChimeraKeep,
-				//       4                  5               6
-				dockerComposeFilePath, projectPrefix, createSymLinks,
-				// 7, 8, 9 ...
-				...options.keep
-			]
-			const installArguments = installArgumentList.filter(v => v).join(' ')
-			await execAsync( buildSSHCommand(`cd ${remoteChimeraHome}; ./chimera-project-install.sh ${installArguments}`))
-		}
-		catch (e) {
-			installLoader(`Cannot install container`, 'error')
-			fatalError( e )
-		}
-		installLoader(`Container installed`)
+		const installArgumentList = [
+			//    1            2                3
+			projectTrunk, projectKeep, relativeChimeraKeep,
+			//       4                  5               6
+			dockerComposeFilePath, projectPrefix, createSymLinks,
+			// 7, 8, 9 ...
+			...options.keep
+		]
+		const installArguments = installArgumentList.filter(v => v).join(' ')
+		command = buildSSHCommand(`cd ${options.remoteChimeraHome}; ./chimera-project-install.sh ${installArguments}`, options);;
+		// Exec remote command
+		await oraExec(command, {}, {
+			text: `Installing container`,
+			errorText: `Cannot install container`,
+			successText: `Container installed`,
+		})
 	}
 
 	// ---- BUILD CONTAINER
 	if (!options.dryRun && !options.noDocker) {
-		const buildLoader = printLoaderLine(`Building container`)
-		try {
-			await execAsync( buildSSHCommand(`cd ${remoteChimeraHome}; ./chimera-project-build.sh ${projectTrunk}`))
-		}
-		catch (e) {
-			buildLoader(`Cannot build container`, 'error')
-			fatalError( e )
-		}
-		buildLoader(`Container built`)
+		// Build remote command
+		command = buildSSHCommand(`cd ${options.remoteChimeraHome}; ./chimera-project-build.sh ${projectTrunk}`, options)
+		// Exec remote command
+		await oraExec(command, {}, {
+			text: `Building container`,
+			errorText: `Cannot build container`,
+			successText: `Container built`,
+		});
 	}
 
 	// ---- AFTER SCRIPTS
 	if ( options.afterScripts.length > 0 && !options.dryRun ) {
-		const afterScriptsLoader = printLoaderLine(`Executing after scripts`)
+		// Build remote command
 		options.debug && console.log( options.afterScripts )
-		try {
-			await execAsync( buildSSHCommand(`cd ${chimeraProjectTrunk}; ${options.afterScripts.join('; ')}`), 'out' )
-		}
-		catch (e) {
-			afterScriptsLoader(`After scripts failed`, 'error')
-			fatalError( e )
-		}
-		afterScriptsLoader(`After scripts succeeded`)
+		command = buildSSHCommand(`cd ${chimeraProjectTrunk}; ${options.afterScripts.join('; ')}`, options)
+		// Exec remote command
+		const scriptResult = await oraExec(command, {}, {
+			text: `Executing after scripts`,
+			errorText: `After scripts failed`,
+			successText: `After scripts succeeded`,
+		});
+		scriptResult && console.log( scriptResult );
 	}
 
 	// ---- PATCH RW RIGHTS
 	if (!options.dryRun) {
-		const patchRightsLoader = printLoaderLine(`Patching R/W rights`)
-		options.debug && console.log( options.afterScripts )
-		try {
-			await execAsync( buildSSHCommand(`cd ${remoteChimeraHome}; ./chimera-project-patch-rights.sh ${projectRoot}`), true )
-		}
-		catch (e) {
-			patchRightsLoader(`Patching R/W right failed`, 'error')
-			fatalError( e )
-		}
-		patchRightsLoader(`R/W rights patched`)
+		command = buildSSHCommand(`cd ${options.remoteChimeraHome}; ./chimera-project-patch-rights.sh ${projectRoot}`, options)
+		await oraExec(command, {}, {
+			text: `Patching R/W rights`,
+			errorText: `Patching R/W right failed`,
+			successText: `R/W rights patched`,
+		});
 	}
 
 	// ---- START CONTAINER
 	if (!options.dryRun && !options.noDocker) {
-		const startedLoader = printLoaderLine(`Starting container ${projectPrefix}`)
-		try {
-			await execAsync( buildSSHCommand(`cd ${remoteChimeraHome}; ./chimera-project-start.sh ${projectTrunk}`))
-		}
-		catch (e) {
-			startedLoader(`Cannot start container`, 'error')
-			fatalError( e )
-		}
-		startedLoader(`Started container ${projectPrefix}`, 'success')
+		command = buildSSHCommand(`cd ${options.remoteChimeraHome}; ./chimera-project-start.sh ${projectTrunk}`, options)
+		await oraExec(command, {}, {
+			text: `Starting container ${projectPrefix}`,
+			errorText: `Cannot start container`,
+			successText: `Started container ${projectPrefix}`,
+		});
 	}
 }
 
+// ----------------------------------------------------------------------------- EXPORTS
 
 module.exports = {
 	chimeraPush,
