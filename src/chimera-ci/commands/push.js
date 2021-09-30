@@ -232,11 +232,11 @@ async function chimeraPush ( options )
 		const destinationCommand = buildSSHCommand(`mkdir -p ${chimeraProjectTrunk}${destination}`, options)
 
 		// Generate rsync command
-		rsyncCommand.push(`${source} ${options.host}:${chimeraProjectTrunk}${destination}`)
+		rsyncCommand.push(`${source} ${options.user}@${options.host}:${chimeraProjectTrunk}${destination}`)
 		rsyncCommand = rsyncCommand.join(' ')
 
 		// Prepend with sshpass if not using ssh key
-		prependSSHPass( rsyncCommand, options )
+		rsyncCommand = prependSSHPass( rsyncCommand, options )
 
 		// Dry run
 		if ( options.dryRun ) {

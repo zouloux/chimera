@@ -27,7 +27,7 @@ module.exports = {
 		return options;
 	},
 
-	checkHost (options ) {
+	checkHost ( options ) {
 		!options.host && nicePrint(`
 			{r/b}Missing {b}host{/r} parameter.
 			Specify it with {b}--host{/} option, or set it in {b}.chimera.yml{/}

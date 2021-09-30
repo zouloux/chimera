@@ -160,7 +160,8 @@ async function exec ()
 	const command = `docker exec -i ${containerID} /bin/bash`
 	const childProcess = require('child_process').exec(command, {
 		env: process.env,
-		cwd: process.cwd()
+		cwd: process.cwd(),
+		//shell: '/bin/bash'
 	});
 
 	// Pipe stdout

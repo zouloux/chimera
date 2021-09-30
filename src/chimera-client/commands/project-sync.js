@@ -5,15 +5,15 @@ const { findProject } = require( "./_common" );
 const { File, FileFinder } = require( "@solid-js/files" );
 
 /**
- * TODO - MVP
- *
- *
  * TODO - V1
+ * - REFACTO DE TOUT CE BORDEL
+ * - Option verbose / debug / --dry-run
+ * - DOCUMENTATION
  * - Synchroniser avec une branche autre que master -> CHIMERA_SYNC_FILE_ROOT=/root/project/keep/*, automatique sur chimera
  * - Proposer la possibilité de supprimer le chimera-sync.sql
- * - Proposer la possibilité de garder X version de chimera-sync.sql avec dates, dans un dossier
  *
  * TODO - Moins important
+ * - Proposer la possibilité de garder X version de chimera-sync.sql avec dates, dans un dossier
  * - Sync files distant to distant, avec prompt ?
  * - Ajouter une option dans .env CHIMERA_SYNC_NO_CONFIRM pour éviter la confirmation où il faut retaper le nom de l'env
  */
@@ -482,7 +482,6 @@ async function projectSync ()
 			scpPassword = await askInput(`${readFrom} password :`, { notEmpty: true })
 		else if ( writeToEnv.files.usePassword )
 			scpPassword = await askInput(`${writeTo} password :`, { notEmpty: true })
-
 
 		for ( const syncPath of project.config.sync )
 		{
