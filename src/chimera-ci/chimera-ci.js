@@ -106,10 +106,14 @@ CLICommands.add('push', async (cliArguments, cliOptions, commandName) => {
 	if ( cliOptions['project-root'] )
 		options.projectRoot = cliOptions['project-root']
 
-	if ( cliOptions.afterScript )	multiInject(options, 'afterScripts', cliOptions.afterScript)
-	if ( cliOptions.path )			multiInject(options, 'paths', cliOptions.path)
-	if ( cliOptions.keep )			multiInject(options, 'keep', cliOptions.keep)
-	if ( cliOptions.exclude )		multiInject(options, 'exclude', cliOptions.exclude)
+	if ( cliOptions['after-script'] )
+		multiInject(options, 'afterScripts', cliOptions['after-script'])
+	if ( cliOptions.path )
+		multiInject(options, 'paths', cliOptions.path)
+	if ( cliOptions.keep )
+		multiInject(options, 'keep', cliOptions.keep)
+	if ( cliOptions.exclude )
+		multiInject(options, 'exclude', cliOptions.exclude)
 
 	// Default paths are no paths
 	if ( !options.paths )
