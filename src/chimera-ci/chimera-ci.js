@@ -42,10 +42,7 @@ CLICommands.before( () => {
 
 // ----------------------------------------------------------------------------- INSTALL
 
-CLICommands.add('install', async (cliArguments, cliOptions, commandName) => {
-	// Prepare default options
-	const options = prepareDefaultOptions( {}, cliOptions )
-
+async function install ( cliOptions, options ) {
 	// Override with cli options and arguments
 	if ( cliOptions['force-update'] )
 		options.forceUpdate = cliOptions['force-update']
@@ -55,6 +52,12 @@ CLICommands.add('install', async (cliArguments, cliOptions, commandName) => {
 
 	// Execute install
 	await chimeraInstall( options );
+}
+
+CLICommands.add('install', async (cliArguments, cliOptions, commandName) => {
+	// Prepare default options
+	const options = prepareDefaultOptions( {}, cliOptions )
+	await install( cliOptions, options );
 })
 
 // ----------------------------------------------------------------------------- CLI COMMANDS
@@ -132,6 +135,10 @@ CLICommands.add('push', async (cliArguments, cliOptions, commandName) => {
 
 	// Project root, do not use process.cwd which can be wrong
 	options.cwd = path.resolve('.')
+
+	// Install if we got the option
+	if ( cliOptions.install )
+		await install(cliOptions, options)
 
 	// Execute push
 	await chimeraPush( options )

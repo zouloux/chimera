@@ -344,7 +344,8 @@ async function chimeraPush ( options )
 			errorText: `After scripts failed`,
 			successText: `After scripts succeeded`,
 		});
-		scriptResult && console.log( scriptResult );
+		scriptResult.stdout && console.log( scriptResult.stdout );
+		scriptResult.stderr && console.log( scriptResult.stderr );
 	}
 
 	// ---- PATCH RW RIGHTS
