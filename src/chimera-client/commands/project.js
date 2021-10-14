@@ -185,6 +185,7 @@ async function exec ()
 	const printShellInvite = () => childProcess.stdin.write(`echo "\> $(pwd) $ "\n`)
 
 	// Pipe stdin to child process and show invite after each command
+	process.stdin.resume();
 	process.stdin.on('data', data => {
 		childProcess.stdin.write(data)
 		if (data.toString() === 'exit\n')

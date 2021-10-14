@@ -20,8 +20,8 @@ async function start ()
 	// Ask to restart it if already started
 	const containers = await getContainerList()
 	if ( containers.find( container => container.name === 'core_nginx' ) ) {
-		const restart = await askList(`Chimera proxy is already running. Do you want to restart it ?`, ['no', 'yes'])
-		if ( restart[0] === 1 ) module.exports.restart();
+		const restart = await askList(`Chimera proxy is already running. Do you want to restart it ?`, ['yes', 'no'])
+		if ( restart[0] === 0 ) module.exports.restart();
 		return;
 	}
 
