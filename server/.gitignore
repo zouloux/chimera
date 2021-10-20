@@ -7,9 +7,9 @@
 /core/gitlab/data/runner-config/config.toml
 
 # Nginx data
-/core/nginx/data/certs/
-/core/nginx/data/logs/
-/core/nginx/data/html/
+/core/nginx/data/certs/*
+/core/nginx/data/logs/*
+/core/nginx/data/html/*
 /core/nginx/data/config/virtual-hosts/*.conf
 
 # All services data
@@ -17,3 +17,5 @@
 
 # Ignore all project files
 /projects/
+
+!.gitkeep

@@ -3,4 +3,6 @@
 .idea
 .DS_Store
 
+!.gitkeep
+
 node_modules/
