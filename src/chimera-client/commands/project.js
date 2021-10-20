@@ -84,7 +84,8 @@ async function start ( cliArguments, cliOptions )
 
 async function stop ( cliArguments, cliOptions, project = null )
 {
-	project ??= await findProject()
+	if (!project)
+		project = await findProject()
 	const cwd = project.root
 	const dockerFile = await getDockerFile( project.root )
 

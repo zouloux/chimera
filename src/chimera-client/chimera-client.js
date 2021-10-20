@@ -29,7 +29,8 @@ const checkReady = () => {
 
 async function askAction ( title, actions, cliArguments, handler )
 {
-	cliArguments[0] ??= await askList(title, actions, { returnType: 'value' });
+	if ( !cliArguments[0] )
+		cliArguments[0] = await askList(title, actions, { returnType: 'value' });
 	const action = cliArguments[0].toLowerCase()
 	if ( actions.indexOf( action ) !== -1 )
 		await handler( action )
