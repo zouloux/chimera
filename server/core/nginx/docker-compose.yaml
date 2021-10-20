@@ -18,7 +18,6 @@ services :
       - './data/logs:/var/log/nginx/'
       - './data/html:/usr/share/nginx/html/'
       - './data/certs:/etc/certs/'
-      - '/etc/letsencrypt/:/etc/letsencrypt/'
 
 networks:
   chimera:
