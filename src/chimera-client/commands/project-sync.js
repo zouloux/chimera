@@ -45,7 +45,7 @@ async function projectSync ()
 	const project = await findProject()
 
 	// List all dot envs
-	const dotEnvs = await FileFinder.find("file", ".env*", {
+	let dotEnvs = await FileFinder.find("file", ".env*", {
 		cwd: project.root
 	})
 
@@ -56,6 +56,9 @@ async function projectSync ()
 	// Too few dot envs
 	if ( dotEnvs.length < 2 )
 		nicePrint(`{b/r}To few dot env files to sync project.`, { code: 2 })
+
+	// Remove .env.default from list
+	dotEnvs = dotEnvs.filter( f => f.fullName !== '.env.default' )
 
 	for ( const file of dotEnvs )
 		await file.load()
