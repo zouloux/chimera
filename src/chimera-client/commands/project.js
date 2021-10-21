@@ -137,10 +137,10 @@ async function open ()
 		// Get hostname and halt if not possible
 		let hostname = await execAsync('hostname')
 		hostname = hostname.trim()
-		url = `https://${hostname}.local`
+		url = `http://${hostname}.local`
 	}
 	else {
-		url = `https://${projectName}.localhost`;
+		url = `http://${projectName}.localhost`;
 	}
 
 	nicePrint(`{d}Opening {b/w}${url}`)

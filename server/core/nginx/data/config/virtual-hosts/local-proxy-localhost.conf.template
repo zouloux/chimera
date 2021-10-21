@@ -3,7 +3,7 @@ server
 {
     # Capture all sub-domains as service and inject service name as header
     # https://nginx.viraptor.info/
-    server_name ~^(?<service>[a-zA-Z0-9\_\-]+)\.localhost;
+    server_name ~^(?<service>[a-zA-Z0-9\_\-]+)\.chimera\.localhost;
     add_header X-service "$service";
 
     # Error logs

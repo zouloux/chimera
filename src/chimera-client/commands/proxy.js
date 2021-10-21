@@ -32,6 +32,13 @@ async function start ()
 			portNotAvailable(443)
 	}, taskError)
 
+	await tryTask(`Creating chimera network`, async () => {
+		try {
+			await execAsync(`docker network create chimera`, 0, serverCWD)
+		}
+		catch (e) {}
+	})
+
 	const serverCWD = { cwd: serverRoot }
 
 	await tryTask(`Enabling configs`, async () => {
@@ -54,9 +61,8 @@ async function start ()
 		const certsPath = "core/nginx/data/certs/"
 		const makeMkCertCommand = (fileName, domain) =>
 			`mkcert -key-file ${certsPath}${fileName}-key.pem -cert-file ${certsPath}${fileName}-cert.pem '${domain}' '*.${domain}'`;
-
 		await execAsync(makeMkCertCommand('hostname', hostname), 0, serverCWD);
-		await execAsync(makeMkCertCommand('localhost', 'localhost'), 0, serverCWD);
+		await execAsync(makeMkCertCommand('localhost', 'chimera.localhost'), 0, serverCWD);
 	}, taskError)
 
 	await tryTask(`Starting Nginx container`, async () => {
