@@ -45,9 +45,7 @@ async function start ()
 		const configPath = 'core/nginx/data/config/virtual-hosts/';
 		const makeCopyConfigCommand = (name) =>
 			`cp ${configPath}${name}.conf.template ${configPath}${name}.conf`
-
-		await execAsync(makeCopyConfigCommand('local-proxy-hostname'), 0, serverCWD)
-		await execAsync(makeCopyConfigCommand('local-proxy-localhost'), 0, serverCWD)
+		await execAsync(makeCopyConfigCommand('local-proxy'), 0, serverCWD)
 	}, taskError)
 
 	// Get public mdns hostname
