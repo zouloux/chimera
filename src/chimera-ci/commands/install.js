@@ -49,6 +49,12 @@ async function chimeraInstall ( options )
 		text: 'Installing ...',
 		successText: 'Installed'
 	}, async taskUpdater => {
+		remoteCommand = buildSSHCommand(`mkdir -p ${options.remoteChimeraHome}`, options)
+		await oraExec(remoteCommand, {}, {
+			text: 'Creating chimera home ...',
+			successText: 'Created chimera home',
+			errorText: 'Unable to create chimera home. Check write permissions.'
+		})
 		await asyncMap(_filesToInstall, async (file, i) => {
 			const remoteFilePath = path.join( options.remoteChimeraHome, file )
 			taskUpdater.setProgress( i, _filesToInstall.length )
