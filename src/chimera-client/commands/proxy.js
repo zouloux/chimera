@@ -34,7 +34,7 @@ async function start ()
 
 	await tryTask(`Creating chimera network`, async () => {
 		try {
-			await execAsync(`docker network create chimera`, 0, serverCWD)
+			await execAsync(`docker network create chimera`, 3, serverCWD)
 		}
 		catch (e) {}
 	})

@@ -118,6 +118,7 @@ async function projectSync ()
 				user: dotEnvContent.CHIMERA_SYNC_MYSQL_USER,
 				password: dotEnvContent.CHIMERA_SYNC_MYSQL_PASSWORD,
 				database: dotEnvContent.CHIMERA_SYNC_MYSQL_DATABASE,
+				isMaria: parseBoolean( dotEnvContent.CHIMERA_SYNC_MYSQL_IS_MARIA ),
 			},
 			// File transfer config
 			files: {
@@ -142,8 +143,9 @@ async function projectSync ()
 		})
 
 		// We have some mysql sync properties, but not all mandatory properties
-		if ( missingMySQLConfigKeys.length !== 0 && missingMySQLConfigKeys.length !== 3 )
-			nicePrint(`{b/r}Missing mysql sync propert${missingMySQLConfigKeys.length > 1 ? 'ies' : 'y'} ${missingMySQLConfigKeys.join(", ")} in file ${file.fullName}`, { code : 1 })
+		// FIXME : This is crap, redo all of this
+		// if ( missingMySQLConfigKeys.length !== 0 && missingMySQLConfigKeys.length < 3 )
+		// 	nicePrint(`{b/r}Missing mysql sync propert${missingMySQLConfigKeys.length > 1 ? 'ies' : 'y'} ${missingMySQLConfigKeys.join(", ")} in file ${file.fullName}`, { code : 1 })
 
 		// No MySQL config detected
 		if ( missingMySQLConfigKeys.length === 3 )
@@ -260,7 +262,7 @@ async function projectSync ()
 		const dumpOptions = [
 			// mandatory from MySQL 8 dump to MariaDB
 			// https://serverfault.com/questions/912162/mysqldump-throws-unknown-table-column-statistics-in-information-schema-1109
-			`--column-statistics=0`,
+			readFromEnv.mysql.isMaria ? `--column-statistics=0` : '', // TODO : Make env
 			// Options
 			`--quick`,
 			`--single-transaction`, // NEW
