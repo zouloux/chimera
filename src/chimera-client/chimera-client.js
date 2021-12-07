@@ -4,8 +4,8 @@ const { CLICommands, nicePrint, askList, execAsync, askInput } = require('@solid
 const { getPreferences } = require( "./commands/_common" );
 const version = require('./package.json').version
 
-// Check if this module is linked from zouloux's _framework directory ;)
-const isLinkedFromFramework = (__dirname.indexOf('/_framework') !== -1)
+// Check if this module is linked from zouloux directory ;) #dirty
+const isLinkedFromFramework = (__dirname.indexOf('/zouloux/') !== -1)
 
 // Halt if module is installed locally and not linked
 if ( !require('is-installed-globally') && !isLinkedFromFramework ) {

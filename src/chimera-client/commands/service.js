@@ -46,15 +46,16 @@ async function list ()
 	const containers = await getContainerList()
 
 	// Browse all available service names
-	serviceNames.map( serviceName => {
+	for ( const serviceName of serviceNames ) {
 		// Open service's docker-compose
 		const dockerComposeFile = new File( path.join(getServicesRoot(), serviceName, 'docker-compose.yaml') )
+		await dockerComposeFile.load()
 
 		// Try to find sub-services in docker-compose
 		let subServices = []
-		if ( dockerComposeFile.exists() ) {
+		if ( await dockerComposeFile.exists() ) {
 			const dockerComposeContent = dockerComposeFile.yaml()
-			//console.log(dockerComposeContent);
+
 			if ('services' in dockerComposeContent) {
 				Object.keys(dockerComposeContent.services).map( key => {
 					const subService = dockerComposeContent.services[ key ]
@@ -75,7 +76,7 @@ async function list ()
 		subServices.map( subService => {
 			nicePrint(`{d/w}- ${subService.name} (${!!subService.container ? '{d/g}running' : '{d/r}stopped'}{d})`)
 		})
-	})
+	}
 }
 
 // ----------------------------------------------------------------------------- START
@@ -86,7 +87,7 @@ async function start ( serviceToStart )
 	const servicePath = path.join(getServicesRoot(), service)
 
 	const startFile = new File( path.join(servicePath, 'start.sh') )
-	if ( startFile.exists() ) {
+	if ( await startFile.exists() ) {
 		await execAsync(startFile.path, 3, {
 			cwd: servicePath,
 			env: process.env
