@@ -67,7 +67,7 @@ CLICommands.add('push', async (cliArguments, cliOptions, commandName) => {
 	let options = {
 		project: null,
 		host: null,
-		branch: 'master',
+		branch: 'main',
 		dockerFile: null,
 		afterScripts: [],
 		paths: [],
@@ -146,7 +146,7 @@ CLICommands.add('push', async (cliArguments, cliOptions, commandName) => {
 	host	: null,
 	project	: null,
 	env		: '.env',
-	branch	: 'master'
+	branch	: 'main'
 })
 
 // ----------------------------------------------------------------------------- DELETE

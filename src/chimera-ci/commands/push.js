@@ -145,7 +145,7 @@ async function chimeraPush ( options )
 
 	// Project prefix for internal network and container identifying
 	const projectPrefix = (
-		options.branch === 'master'
+		options.branch === 'master' || options.branch === 'main'
 		? options.project
 		: `${options.project}_${options.branch}`
 	)
