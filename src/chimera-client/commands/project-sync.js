@@ -10,10 +10,12 @@ const { File, FileFinder } = require( "@solid-js/files" );
  * - Option verbose / debug / --dry-run
  * - DOCUMENTATION
  * - Synchroniser avec une branche autre que master -> CHIMERA_SYNC_FILE_ROOT=/root/project/keep/*, automatique sur chimera
- * - Proposer la possibilité de supprimer le chimera-sync.sql
+ * 		- Ajouter une option "ask" pour rendre le truc dynamique ? Quid de la DB vs les fichiers de branche ?
+ * - Proposer la possibilité de clean le chimera-sync.sql généré
+ * - Ajouter une commande qui affiche toutes les options .env
  *
  * TODO - Moins important
- * - Proposer la possibilité de garder X version de chimera-sync.sql avec dates, dans un dossier
+ * - Proposer la possibilité de garder X version de chimera-sync.sql avec dates, dans un dossier  (ça sert à rien d'archiver si on peut pas revert)
  * - Sync files distant to distant, avec prompt ?
  * - Ajouter une option dans .env CHIMERA_SYNC_NO_CONFIRM pour éviter la confirmation où il faut retaper le nom de l'env
  */
@@ -105,6 +107,7 @@ async function projectSync ()
 		});
 
 		const isLocal = file.fullName === '.env';
+		const branch = dotEnvContent.CHIMERA_SYNC_FILE_BRANCH ?? 'main'
 
 		// Generate clean config object
 		let parsedConfig = {
@@ -124,7 +127,7 @@ async function projectSync ()
 			files: {
 				...parseHostPort(dotEnvContent.CHIMERA_SYNC_FILE_HOST, 22),
 				user: dotEnvContent.CHIMERA_SYNC_FILE_USER ?? 'root',
-				root: dotEnvContent.CHIMERA_SYNC_FILE_ROOT ?? `~/chimera/projects/${project.config.project}/master/keep`,
+				root: dotEnvContent.CHIMERA_SYNC_FILE_ROOT ?? `~/chimera/projects/${project.config.project}/${branch}/keep`,
 				usePassword: parseBoolean(dotEnvContent.CHIMERA_SYNC_FILE_USE_PASSWORD)
 			},
 			// Parse boolean for allow read and allow write
@@ -258,6 +261,9 @@ async function projectSync ()
 
 	// ------------------------------------------------------------------------- PULL DB
 
+	let readScpPassword = ''
+	let writeScpPassword = ''
+
 	if ( whatToSync !== 'files' ) {
 		const dumpOptions = [
 			// mandatory from MySQL 8 dump to MariaDB
@@ -271,9 +277,8 @@ async function projectSync ()
 		]
 
 		// Ask for password
-		let scpPassword = ''
-		if ( readFromEnv.mysql.pullMethod === 'scp' && readFromEnv.files.usePassword )
-			scpPassword = await askInput(`${readFrom} password :`, { notEmpty: true })
+		if ( readFromEnv.mysql.pullMethod === 'scp' && readFromEnv.files.usePassword && !readScpPassword )
+			readScpPassword = await askInput(`${readFrom} password :`, { notEmpty: true })
 
 		const loader = printLoaderLine(`Pulling DB from ${readFrom}`)
 
@@ -314,7 +319,7 @@ async function projectSync ()
 				readFromEnv.mysql.database
 			]
 			const dumpDestination = `/tmp/${dumpUID}.sql`
-			const sshPass = readFromEnv.files.usePassword ? `sshpass -p '${scpPassword}' ` : '';
+			const sshPass = readFromEnv.files.usePassword ? `sshpass -p '${readScpPassword}' ` : '';
 			const generateSSHCommand = command => `${sshPass}ssh ${readFromEnv.files.user}@${readFromEnv.files.host} -p ${readFromEnv.files.port} '${command}'`
 			const sshDumpCommand = generateSSHCommand(`mysqldump ${options.join(' ')} > ${dumpDestination}`)
 			const scpCommand = `${sshPass}scp -P ${readFromEnv.files.port} ${readFromEnv.files.user}@${readFromEnv.files.host}:${dumpDestination} ${path.join(project.root, mysqlBackupFileName)}`
@@ -392,9 +397,8 @@ async function projectSync ()
 
 	if ( whatToSync !== 'files' ) {
 		// Ask for password
-		let scpPassword = ''
-		if ( writeToEnv.mysql.pushMethod === 'scp' && writeToEnv.files.usePassword )
-			scpPassword = await askInput(`${writeTo} password :`, { notEmpty: true })
+		if ( writeToEnv.mysql.pushMethod === 'scp' && writeToEnv.files.usePassword && !writeScpPassword )
+			writeScpPassword = await askInput(`${writeTo} password :`, { notEmpty: true })
 
 		const loader = printLoaderLine(`Pushing DB to ${writeTo}`)
 
@@ -430,7 +434,7 @@ async function projectSync ()
 				writeToEnv.mysql.database
 			]
 			const dumpDestination = `/tmp/${dumpUID}.sql`
-			const sshPass = writeToEnv.files.usePassword ? `sshpass -p '${scpPassword}' ` : '';
+			const sshPass = writeToEnv.files.usePassword ? `sshpass -p '${writeScpPassword}' ` : '';
 			const generateSSHCommand = command => `${sshPass}ssh ${writeToEnv.files.user}@${writeToEnv.files.host} -p ${writeToEnv.files.port} '${command}'`
 			const sshInjectCommand = generateSSHCommand(`mysql ${ options.join( ' ' ) } < ${ dumpDestination }`)
 			const scpCommand = `${sshPass}scp -P ${writeToEnv.files.port} ${path.join(project.root, mysqlBackupFileName)} ${writeToEnv.files.user}@${writeToEnv.files.host}:${dumpDestination}`
@@ -484,9 +488,9 @@ async function projectSync ()
 		// Ask for password
 		let scpPassword = ''
 		if ( readFromEnv.files.usePassword )
-			scpPassword = await askInput(`${readFrom} password :`, { notEmpty: true })
+			scpPassword = readScpPassword ?? (await askInput(`${readFrom} password :`, { notEmpty: true }))
 		else if ( writeToEnv.files.usePassword )
-			scpPassword = await askInput(`${writeTo} password :`, { notEmpty: true })
+			scpPassword = writeScpPassword ?? (await askInput(`${writeTo} password :`, { notEmpty: true }))
 
 		for ( const syncPath of project.config.sync )
 		{
@@ -552,7 +556,7 @@ async function projectSync ()
 
 	// ------------------------------------------------------------------------- FINISH
 
-	//nicePrint(`{b/g} Sync complete 👍`)
+	nicePrint(`{b/g} Sync complete 👌`)
 }
 
 // ----------------------------------------------------------------------------- EXPORTS

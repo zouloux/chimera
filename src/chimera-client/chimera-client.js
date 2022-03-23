@@ -8,12 +8,12 @@ const version = require('./package.json').version
 const isLinkedFromFramework = (__dirname.indexOf('/zouloux/') !== -1)
 
 // Halt if module is installed locally and not linked
-// if ( !require('is-installed-globally') && !isLinkedFromFramework ) {
-// 	nicePrint(`
-// 		{b/r}Chimera-client is designed to be used as a global package only.
-// 		{d/i}Please run: {b}npm i -g @zouloux/chimera-client
-// 	`, { code: 1 })
-// }
+if ( !require('is-installed-globally') && !isLinkedFromFramework ) {
+	nicePrint(`
+		{b/r}Chimera-client is designed to be used as a global package only.
+		{d/i}Please run: {b}npm i -g @zouloux/chimera-client
+	`, { code: 1 })
+}
 
 // ----------------------------------------------------------------------------- UTILS
 
