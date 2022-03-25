@@ -149,12 +149,22 @@ async function open ()
 
 // ----------------------------------------------------------------------------- EXEC
 
-async function exec ()
+async function exec ( cliArguments )
 {
 	// Find project
 	const project = await findProject()
 	const projectName = project.config.project
 	const containerID = `project_${project.config.project}`
+
+	// Exec with a command which was in argument
+	if ( 1 in cliArguments ) {
+		const command = `docker exec -i ${containerID} ${cliArguments[1]}`
+		await execAsync(command, 3, {
+			env: process.env,
+			cwd: process.cwd(),
+		});
+		process.exit();
+	}
 
 	// Connect to a piped shell
 	const connectTask = createTask(`Connecting to ${projectName}`)
