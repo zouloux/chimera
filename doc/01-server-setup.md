@@ -171,7 +171,7 @@ Configure Gitlab :
 - ...
 
 6. Setup gitlab token
-- Connect to your freshly installed gitlab, then go to `/admin/runners`. Copy the **registration token**.
+- Connect to your freshly installed gitlab, then go to web page `/admin/runners`. Copy the **registration token**.
 - Copy Gitlab runner config template :
     - `cd ~/chimera/core/gitlab/data/runner-config`
     - `cp config.toml.template config.toml`
@@ -186,12 +186,13 @@ Configure Gitlab :
     - Validate and exit shell with ctrl+c
 - Configure generated file for your needs following [this](https://docs.gitlab.com/runner/configuration/advanced-configuration.html)
 - You can restart everything to be sure with `cd ~/chimera/core/gitlab && docker-compose down && docker-compose up -d`
-- After restart, Gitlab's `/admin/runners` should show registered runner.
+- After restart, Gitlab's web page `/admin/runners` should show registered runner.
 
-7. Set global variables
-- Go to Gitlab's `/admin/application_settings/ci_cd` and add 3 variables :
-    - `SSH_PRIVATE` and `SSH_PUBLIC` (generate a key for to identify gitlab, [more info](https://git-scm.com/book/en/v2/Git-on-the-Server-Generating-Your-SSH-Public-Key)).
-      Remove comments from `SSH_PRIVATE`, it should only inclure the key body.
+7. Create SSH key and set global variables
+- Generate an SSH key for your server to identify it with other production servers ([more info](https://git-scm.com/book/en/v2/Git-on-the-Server-Generating-Your-SSH-Public-Key)).
+- Then, go to Gitlab's `/admin/application_settings/ci_cd` and add 3 variables :
+    - `SSH_PRIVATE` and `SSH_PUBLIC` 
+      Remove comments from `SSH_PRIVATE`, it should only include the key body.
     - `CHIMERA_HOST` to `root@172.17.0.1:2002` if Gitlab is installed on same server
       than Chimera. Otherwise, specify SSH target to connect from outside.
 - Add public key to `~/.ssh/authorized_keys` on Chimera server
