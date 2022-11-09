@@ -2,7 +2,7 @@
 
 ### Requirements
 
-Tested on Ubuntu 20.04 on a VPS configured with :
+Tested on Ubuntu 22.04 on a VPS configured with :
 - 8gb of ram
 - 160 gb of SSD
 - 4 vCores
@@ -160,16 +160,21 @@ see if it crashes, and if you have any useful log.
 - `docker-compose up -d`
 
 After some minutes, you should be able to connect to `https://gitlab.DOMAIN_NAME`.
-Insert quickly your master password (create a big one), then connect with user
-`root` and the password you just entered.
-You can follow instructions to configure gitlab on [this tutorual](https://www.howtoforge.com/how-to-install-gitlab-server-with-docker-on-ubuntu-1804/).
+A password file is created here. `cat /root/chimera/core/gitlab/data/web-config/initial_root_password`.
+Use it to log into Gitlab with user `root`
+
+> You can follow instructions to configure gitlab on [this tutorual](https://www.howtoforge.com/how-to-install-gitlab-with-docker-on-ubuntu-22-04/).
+
+Configure Gitlab :
+- Disable sign-up form ( we will create accounts when needed )
+- Disable Prometheus
 
 6. Setup gitlab token
 - Connect to your freshly installed gitlab, then go to `/admin/runners`. Copy the **registration token**.
 - Copy Gitlab runner config template :
     - `cd ~/chimera/core/gitlab/data/runner-config`
     - `cp config.toml.template config.toml`
-- Connect to Gitlab runner's shell : `cd ~ && ./docker-open-shell.sh core_gitlab-runner`
+- Connect to Gitlab runner's shell : `cd ~/chimera && ./docker-exec.sh core_gitlab-runner`
 - Register a new runner : `gitlab-runner register` with parameters :
     - http://gitlab.chimera/
     - Enter registration token
