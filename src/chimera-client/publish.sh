@@ -41,7 +41,7 @@ read commitMessage
 # Add files, commit and tag
 git add .
 git commit -m"$commitMessage"
-git tag -a "$newVersion" -m"$commitMessage"
 # Push commit and tags
 git push
-git push --tags
+# Publish to npm
+npm publish
