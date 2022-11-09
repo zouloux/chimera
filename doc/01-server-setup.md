@@ -139,6 +139,7 @@ FIY, Gitlab is configured to run behind an SSL enabled Nginx proxy.
 - Update `DOMAIN_NAME` on line 28 and 29 with generated domain ID from certbot.
   If not sure, do `ls -la /etc/letsencrypt/live/`, sometimes Certbot adds an
   extension to the folder name.
+- Also edit and replace `default.conf`
 
 3. Create chimera private network
 - `docker network create chimera`
@@ -156,7 +157,6 @@ see if it crashes, and if you have any useful log.
 
 5. Start gitlab server as detached service
 - `cd ~/chimera/core/gitlab`
-- `docker-compose build`
 - `docker-compose up -d`
 
 After some minutes, you should be able to connect to `https://gitlab.DOMAIN_NAME`.
