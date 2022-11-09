@@ -168,6 +168,7 @@ Use it to log into Gitlab with user `root`
 Configure Gitlab :
 - Disable sign-up form ( we will create accounts when needed )
 - Disable Prometheus
+- ...
 
 6. Setup gitlab token
 - Connect to your freshly installed gitlab, then go to `/admin/runners`. Copy the **registration token**.
@@ -178,8 +179,10 @@ Configure Gitlab :
 - Register a new runner : `gitlab-runner register` with parameters :
     - http://gitlab.chimera/
     - Enter registration token
-    - Select Docker
-    - Specify default docker image, can be `misterio92/ci-php-node`
+    - Description : `gitlab-runner`
+    - Tags : `gitlab,runner`
+    - Select `docker` as engine
+    - Specify default docker image, can be `zouloux/docker-ci-php-node` or `misterio92/ci-php-node`
     - Validate and exit shell with ctrl+c
 - Configure generated file for your needs following [this](https://docs.gitlab.com/runner/configuration/advanced-configuration.html)
 - You can restart everything to be sure with `cd ~/chimera/core/gitlab && docker-compose down && docker-compose up -d`
