@@ -216,11 +216,11 @@ also renew certbot SSL certificate if needed.
 
 Optionally, you can setup a common MySQL server with a PhpMyAdmin interface.
 
-- Got to mysql service directory : `cd ~/chimera/mysql`
+- Got to mysql service directory : `cd ~/chimera/services/mysql`
+- Open port on server's internal firewall : `sudo ufw allow 3306`
+  - ( and open port on external firewall also )
 - Create a new MySQL password :
   - `echo "MYSQL_ROOT_PASSWORD=$(cat /dev/random | LC_CTYPE=C tr -dc "[:alpha:]" | head -c 10)" > .env`
 - See the generated password with `cat .env`
 - Start service with `docker-compose up -d`
 - Go to `https://phpmyadmin.DOMAIN_NAME`, Default MySQL login is `root`
-- Open port on server's internal firewall : `sudo ufw allow 3306`
-- Allow port on external firewall also.
