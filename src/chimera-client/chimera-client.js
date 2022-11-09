@@ -5,7 +5,7 @@ const { getPreferences } = require( "./commands/_common" );
 const version = require('./package.json').version
 
 // Check if this module is linked from zouloux directory ;) #dirty
-// const isLinkedFromFramework = (__dirname.indexOf('/zouloux/') !== -1)
+//const isLinkedFromFramework = (__dirname.indexOf('/zouloux/') !== -1)
 
 // TODO : Check if in framework and verify if installed globally
 // TODO : Beware is-installed-globally seems to fail
@@ -21,7 +21,8 @@ const version = require('./package.json').version
 
 // ----------------------------------------------------------------------------- UTILS
 
-const printUsingVersion = () => nicePrint(`{d}Using Chimera client {b/d}v${version}${isLinkedFromFramework ? '{/} - {b/w}linked' : ''}`)
+// const printUsingVersion = () => nicePrint(`{d}Using Chimera client {b/d}v${version}${isLinkedFromFramework ? '{/} - {b/w}linked' : ''}`)
+const printUsingVersion = () => nicePrint(`{d}Using Chimera client {b/d}v${version}`)
 
 const checkReady = () => {
 	if ( getPreferences().ready ) return
