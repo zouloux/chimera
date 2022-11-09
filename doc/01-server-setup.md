@@ -190,6 +190,8 @@ Configure Gitlab :
 
 7. Create SSH key and set global variables
 - Generate an SSH key for your server to identify it with other production servers ([more info](https://git-scm.com/book/en/v2/Git-on-the-Server-Generating-Your-SSH-Public-Key)).
+  - `cd ~/.ssh`
+  - `ssh-keygen -o` ( default path and no passphrase )
 - Then, go to Gitlab's `/admin/application_settings/ci_cd` and add 3 variables :
     - `SSH_PRIVATE` and `SSH_PUBLIC` 
       Remove comments from `SSH_PRIVATE`, it should only include the key body.
