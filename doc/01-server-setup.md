@@ -101,7 +101,11 @@ This is why we use **dns-01** challenge in this example. DNS challenge means it 
 1. Pull chimera sources from github
 - `git clone https://github.com/zouloux/chimera.git chimera-trunk`
 - `ln -s chimera-trunk/server chimera`
-  We can keep `chimera-trunk` to be able to pull `Chimera` updates.
+We can keep `chimera-trunk` to be able to pull `Chimera` updates.
+
+> Note : The chimera repo is private, to clone it from your server, you'll need to create a PAT token from your Github account
+> Create a new token here ( with repo access ) : https://github.com/settings/tokens
+> Then prepend your token as a http user like so : `git clone https://TOKEN@github.com/zouloux/chimera.git chimera-trunk`
 
 #### Configure Gitlab
 
