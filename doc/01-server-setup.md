@@ -187,6 +187,7 @@ Configure Gitlab :
 - Configure generated file for your needs following [this](https://docs.gitlab.com/runner/configuration/advanced-configuration.html)
 - You can restart everything to be sure with `cd ~/chimera/core/gitlab && docker-compose down && docker-compose up -d`
 - After restart, Gitlab's web page `/admin/runners` should show registered runner.
+- Configure this runner (`/admin/runners/1`) and enable check **"Run untagged jobs"**
 
 7. Create SSH key and set global variables
 - Generate an SSH key for your server to identify it with other production servers ([more info](https://git-scm.com/book/en/v2/Git-on-the-Server-Generating-Your-SSH-Public-Key)).

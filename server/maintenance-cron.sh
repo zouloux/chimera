@@ -5,6 +5,8 @@ docker container prune -f
 docker image prune -a -f
 docker system prune -f
 
+# TODO : docker build prune ?
+
 # TODO : WIP
 # TODO : Allow custom certbot renew script because of unability to renew automatically wildcard certs without DNS config ...
 # TODO : docker-compose not found when exec from crontab !
