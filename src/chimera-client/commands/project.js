@@ -140,7 +140,7 @@ async function open ()
 		url = `http://${hostname}.local`
 	}
 	else {
-		url = `http://${projectName}.chimera.localhost`;
+		url = `http://${projectName}.localhost`;
 	}
 
 	nicePrint(`{d}Opening {b/w}${url}`)

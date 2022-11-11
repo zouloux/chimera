@@ -51,7 +51,7 @@ async function start ()
 	// Get public mdns hostname
 	// TODO : Fail safe ? How does it behave on windows / linux ?
 	let hostname = await execAsync(`hostname`)
-	hostname = hostname.trim() + '.local'
+	hostname = hostname.trim().split(".local")[0] + '.local'
 
 	await tryTask(`Generating SSL certificates for ${hostname} and localhost`, async () => {
 		const certsDirectory = new Directory( path.join(serverRoot, 'core/nginx/data/certs') )
@@ -60,7 +60,7 @@ async function start ()
 		const makeMkCertCommand = (fileName, domain) =>
 			`mkcert -key-file ${certsPath}${fileName}-key.pem -cert-file ${certsPath}${fileName}-cert.pem '${domain}' '*.${domain}'`;
 		await execAsync(makeMkCertCommand('hostname', hostname), 0, serverCWD);
-		await execAsync(makeMkCertCommand('localhost', 'chimera.localhost'), 0, serverCWD);
+		await execAsync(makeMkCertCommand('localhost', 'localhost'), 0, serverCWD);
 	}, taskError)
 
 	await tryTask(`Starting Nginx container`, async () => {

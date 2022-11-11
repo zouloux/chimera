@@ -22,7 +22,7 @@ const version = require('./package.json').version
 // ----------------------------------------------------------------------------- UTILS
 
 // const printUsingVersion = () => nicePrint(`{d}Using Chimera client {b/d}v${version}${isLinkedFromFramework ? '{/} - {b/w}linked' : ''}`)
-const printUsingVersion = () => nicePrint(`{d}Using Chimera client {b/d}v${version}`)
+const printUsingVersion = () => nicePrint(`{d}Using Chimera client {b/d}v${version} {d}${__dirname}`)
 
 const checkReady = () => {
 	if ( getPreferences().ready ) return
