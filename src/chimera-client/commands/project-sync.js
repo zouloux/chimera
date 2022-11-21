@@ -59,8 +59,11 @@ async function projectSync ()
 	if ( dotEnvs.length < 2 )
 		nicePrint(`{b/r}To few dot env files to sync project.`, { code: 2 })
 
-	// Remove .env.default from list
-	dotEnvs = dotEnvs.filter( f => f.fullName !== '.env.default' )
+	// Remove .env.default and .env.example from list
+	dotEnvs = dotEnvs.filter( f =>
+		f.fullName !== '.env.default'
+		&& f.fullName !== '.env.example'
+	)
 
 	for ( const file of dotEnvs )
 		await file.load()
@@ -181,6 +184,7 @@ async function projectSync ()
 	fromList = fromList.sort( a => {
 		if ( a === 'local' ) 	return 10
 		if ( a === 'chimera' ) 	return -10
+		if ( a === 'staging' ) 	return -10
 		else 					return 0
 	})
 	if ( fromList.length === 0 )
