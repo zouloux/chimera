@@ -3,21 +3,11 @@ server
 {
     # Capture all sub-domains as service and inject service name as header
     # https://nginx.viraptor.info/
-    server_name ~^(?<service>[a-zA-Z0-9\_\-]+)\.localhost;
+    server_name ~^(?<service>[a-zA-Z0-9\_\-]+)\.(ssl\.)?localhost;
     add_header X-service "$service";
 
     # Enable CORS in localhost
-    # https://gist.github.com/Stanback/7145487
-    add_header 'Access-Control-Allow-Origin' "$http_origin" always;
-    add_header 'Access-Control-Allow-Credentials' 'true' always;
-    add_header 'Access-Control-Allow-Methods' 'GET, POST, PUT, DELETE, OPTIONS' always;
-    add_header 'Access-Control-Allow-Headers' 'Accept,Authorization,Cache-Control,Content-Type,DNT,If-Modified-Since,Keep-Alive,Origin,User-Agent,X-Requested-With' always;
-    add_header 'Access-Control-Expose-Headers' 'Authorization' always;
-    add_header 'Access-Control-Allow-Private-Network' 'true' always;
-
-    # Error logs
-    error_log off;
-    #error_log "/dev/stdout" "/var/log/nginx/localhost-error.log";
+    include /etc/nginx/partials/cors.conf;
 
     # Redirect all queries
     location /
@@ -25,7 +15,8 @@ server
         # Use docker resolver so $services becomes container IP
         resolver 127.0.0.11 valid=60s;
 
-        # Force to get service from .chimera network to avoid being a huge proxy for everyone
+        # Relay request to internal chimera network.
+        # Force to get service from .chimera DNS to avoid being a huge proxy for everyone.
         set $target http://$service.chimera:80;
 
         # Proxy to this target
@@ -41,24 +32,19 @@ server
     listen [::]:80;
     listen 443 ssl;
     listen [::]:443 ssl;
-    ssl_certificate /etc/certs/localhost-cert.pem;
-    ssl_certificate_key /etc/certs/localhost-key.pem;
+    ssl_certificate /etc/certs/localhost+4.pem;
+    ssl_certificate_key /etc/certs/localhost+4-key.pem;
 }
 
 server
 {
-    # Enable CORS in localhost
-    # https://gist.github.com/Stanback/7145487
-    add_header 'Access-Control-Allow-Origin' "$http_origin" always;
-    add_header 'Access-Control-Allow-Credentials' 'true' always;
-    add_header 'Access-Control-Allow-Methods' 'GET, POST, PUT, DELETE, OPTIONS' always;
-    add_header 'Access-Control-Allow-Headers' 'Accept,Authorization,Cache-Control,Content-Type,DNT,If-Modified-Since,Keep-Alive,Origin,User-Agent,X-Requested-With' always;
-    add_header 'Access-Control-Expose-Headers' 'Authorization' always;
-    add_header 'Access-Control-Allow-Private-Network' 'true' always;
+    # Capture all sub-domains as service and inject service name as header
+    # https://nginx.viraptor.info/
+    server_name ~^(?<service>[a-zA-Z0-9\_\-]+)\-\-(.*)\.loca.lt;
+    add_header X-service "$service";
 
-    # Error logs
-    error_log off;
-    #error_log "/dev/stdout" "/var/log/nginx/localhost-error.log";
+    # Enable CORS in localhost
+    include /etc/nginx/partials/cors.conf;
 
     # Redirect all queries
     location /
@@ -66,7 +52,42 @@ server
         # Use docker resolver so $services becomes container IP
         resolver 127.0.0.11 valid=60s;
 
-        # Force to get service from .chimera network to avoid being a huge proxy for everyone
+        # Relay request to internal chimera network.
+		# Force to get service from .chimera DNS to avoid being a huge proxy for everyone.
+		set $target http://$service.chimera:80;
+
+        # Proxy to this target
+        proxy_pass $target;
+    }
+
+    # Simulate https connexion with this header
+    proxy_set_header    Host $http_host;
+    proxy_set_header    X-Real-IP $remote_addr;
+    proxy_set_header    X-Forwarded-Port    443;
+    proxy_set_header    X-Forwarded-Proto "https"
+    proxy_set_header    X-Forwarded-For $proxy_add_x_forwarded_for;
+
+    # Enable HTTP only because local tunnel does the HTTPS part
+    listen 80;
+    listen [::]:80;
+}
+
+
+server
+{
+    server_name  _;
+
+    # Enable CORS in localhost
+    include /etc/nginx/partials/cors.conf;
+
+    # Redirect all queries
+    location /
+    {
+        # Use docker resolver so $services becomes container IP
+        resolver 127.0.0.11 valid=60s;
+
+        # Relay request to internal chimera network.
+        # Force to get service from .chimera DNS to avoid being a huge proxy for everyone.
         set $target http://default.chimera:80;
 
         # Proxy to this target
@@ -78,51 +99,10 @@ server
 
     # Enable HTTP and HTTPS with mkcert certificates
     # https://github.com/FiloSottile/mkcert
-    listen 80;
-    listen [::]:80;
-    listen 443 ssl;
-    listen [::]:443 ssl;
-    ssl_certificate /etc/certs/hostname-cert.pem;
-    ssl_certificate_key /etc/certs/hostname-key.pem;
-}
-
-server
-{
-    # Capture all sub-domains as service and inject service name as header
-    # https://nginx.viraptor.info/
-    server_name ~^(?<service>[a-zA-Z0-9\_\-]+)\-\-(.*)\.loca.lt;
-    add_header X-service "$service";
-
-    # Enable CORS in localhost
-    # https://gist.github.com/Stanback/7145487
-    add_header 'Access-Control-Allow-Origin' "$http_origin" always;
-    add_header 'Access-Control-Allow-Credentials' 'true' always;
-    add_header 'Access-Control-Allow-Methods' 'GET, POST, PUT, DELETE, OPTIONS' always;
-    add_header 'Access-Control-Allow-Headers' 'Accept,Authorization,Cache-Control,Content-Type,DNT,If-Modified-Since,Keep-Alive,Origin,User-Agent,X-Requested-With' always;
-    add_header 'Access-Control-Expose-Headers' 'Authorization' always;
-    add_header 'Access-Control-Allow-Private-Network' 'true' always;
-
-    # Error logs
-    error_log off;
-    #error_log "/dev/stdout" "/var/log/nginx/localhost-error.log";
-
-    # Redirect all queries
-    location /
-    {
-        # Use docker resolver so $services becomes container IP
-        resolver 127.0.0.11 valid=60s;
-
-        # Force to get service from .chimera network to avoid being a huge proxy for everyone
-        set $target http://$service.chimera:80;
-
-        # Proxy to this target
-        proxy_pass $target;
-    }
-
-    # Simulate https connexion with this header
-    proxy_set_header    X-Forwarded-Port    443;
-
-    # Enable HTTP only because local tunnel does the HTTPS part
-    listen 80;
-    listen [::]:80;
+    listen 80 default_server;
+    listen [::]:80 default_server;
+    listen 443 ssl default_server;
+    listen [::]:443 ssl default_server;
+    ssl_certificate /etc/certs/localhost+4.pem;
+    ssl_certificate_key /etc/certs/localhost+4-key.pem;
 }
