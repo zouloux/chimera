@@ -1,6 +1,6 @@
 const path = require( "path" );
 const { Directory, resolveHome } = require( "@solid-js/files" );
-const { execAsync, tryTask, askList } = require( "@solid-js/cli" );
+const { execAsync, tryTask, askList, nicePrint } = require( "@solid-js/cli" );
 const { getPreferences, getContainerList, taskError } = require( "./_common" );
 const isPortReachable = require('is-port-reachable');
 
@@ -53,14 +53,13 @@ async function start ()
 	let hostname = await execAsync(`hostname`)
 	hostname = hostname.trim().split(".local")[0] + '.local'
 
-	await tryTask(`Generating SSL certificates for ${hostname} and localhost`, async () => {
+	await tryTask(`Generating SSL certificates for ${hostname}, localhost and *.ssl.localhost`, async () => {
 		const certsDirectory = new Directory( path.join(serverRoot, 'core/nginx/data/certs') )
 		await certsDirectory.create()
-		const certsPath = "core/nginx/data/certs/"
-		const makeMkCertCommand = (fileName, domain) =>
-			`mkcert -key-file ${certsPath}${fileName}-key.pem -cert-file ${certsPath}${fileName}-cert.pem '${domain}' '*.${domain}'`;
-		await execAsync(makeMkCertCommand('hostname', hostname), 0, serverCWD);
-		await execAsync(makeMkCertCommand('localhost', 'localhost'), 0, serverCWD);
+		const command = `mkcert "localhost" "*.ssl.localhost" ${hostname} "*.${hostname}" 127.0.0.1`
+		await execAsync(command, 0, {
+			cwd: path.join(serverRoot, "core/nginx/data/certs/")
+		});
 	}, taskError)
 
 	await tryTask(`Starting Nginx container`, async () => {
@@ -68,6 +67,8 @@ async function start ()
 			cwd: path.join(serverRoot, 'core/nginx')
 		})
 	}, taskError)
+
+	nicePrint(`{d}Check {b/d}mkcert{/d} documentation if certificates are not working properly : https://github.com/FiloSottile/mkcert`)
 }
 
 // ----------------------------------------------------------------------------- STOP
@@ -75,7 +76,7 @@ async function start ()
 async function stop ()
 {
 	await tryTask(`Stopping Nginx container`, async () => {
-		await execAsync(`docker-compose down`, 0, {
+		await execAsync(`docker-compose down -t 0`, 0, {
 			cwd: path.join(serverRoot, 'core/nginx')
 		})
 	}, taskError)

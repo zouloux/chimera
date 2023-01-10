@@ -1,6 +1,6 @@
 {
 	"name": "@zouloux/chimera-client",
-	"version": "1.16.20",
+	"version": "1.17.0",
 	"description": "Command line client to manage Chimera projects.",
 	"author": "Alexis Bouhet (zouloux)",
 	"main": "./chimera-client.js",
@@ -14,6 +14,8 @@
 		"is-installed-globally": "^0.4.0",
 		"is-port-reachable": "^3.0.0",
 		"open": "^8.2.1",
-		"preferences": "^2.0.2"
+		"preferences": "^2.0.2",
+		"localtunnel": "^2.0.2",
+		"qrcode-terminal": "^0.12.0"
 	}
 }

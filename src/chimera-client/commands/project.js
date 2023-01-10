@@ -1,9 +1,10 @@
 const path = require( "path" );
-const { printLoaderLine } = require( "@solid-js/cli" );
+const { printLoaderLine, askList } = require( "@solid-js/cli" );
 const { execAsync } = require( "@solid-js/cli" );
 const { findProject } = require( "./_common" );
 const { nicePrint } = require( "@solid-js/cli" );
-const { File, FileFinder } = require('@solid-js/files')
+const { FileFinder } = require('@solid-js/files')
+const { delay } = require( "@solid-js/core" );
 
 const defaultDockerFiles = [
 	'docker-compose.chimera.yaml',
@@ -57,7 +58,7 @@ async function start ( cliArguments, cliOptions )
 
 	// Open browser if needed
 	if ( cliOptions.open || cliOptions.O )
-		await open()
+		await open( false )
 
 	// Start project in sync and sigkill
 	const command = `docker-compose -f ${dockerFile} up --no-build --abort-on-container-exit --force-recreate --remove-orphans`
@@ -78,7 +79,7 @@ async function stop ( cliArguments, cliOptions, project = null )
 
 	let loaderLine = printLoaderLine(`Stopping current ${project.config.project}`)
 	try {
-		await execAsync(`docker-compose -f ${dockerFile} down --remove-orphans`, 0, { cwd })
+		await execAsync(`docker-compose -f ${dockerFile} down --remove-orphans -t 0`, 0, { cwd })
 	} catch (e) {
 		loaderLine(`Error while stopping docker project`)
 		console.error( e )
@@ -103,33 +104,28 @@ async function attach ( cliArguments, cliOptions )
 
 // ----------------------------------------------------------------------------- OPEN
 
-async function open ()
+async function open ( ask = true )
 {
 	const project = await findProject()
-
 	let projectName = project.config.project
 
-	try {
-		// Read dot env in project root and try to guess if declared
-		// as default or with a name
-		const dotEnv = new File(path.join(project.root, '.env'))
-		await dotEnv.load()
-		const data = dotEnv.dotEnv()
-		projectName = data.COMPOSE_HOSTNAME ?? 'default'
-	}
-	catch (e) {}
+	const endpoints = [
+		`https://${projectName}.ssl.localhost`,
+		`http://${projectName}.localhost`,
+		`http://localhost`
+	]
 
-	let url;
-	if ( projectName.trim().toLowerCase() === 'default' ) {
-		// Get hostname and halt if not possible
-		let hostname = await execAsync('hostname')
-		hostname = hostname.trim()
-		url = `http://${hostname}.local`
-	}
-	else {
-		url = `http://${projectName}.localhost`;
+	let index = 0;
+	if ( ask ) {
+		const r = await askList("Which endpoint to open ?", [
+			`[SSL]		${endpoints[0]}`,
+			`[HTTP]	${endpoints[1]}`,
+			'[DEFAULT]	${endpoints[2]}',
+		])
+		index = r[0]
 	}
 
+	const url = endpoints[ index ]
 	nicePrint(`{d}Opening {b/w}${url}`)
 	require('open')(url)
 }
@@ -161,6 +157,44 @@ async function sync ()
 	await projectSync();
 }
 
+// ----------------------------------------------------------------------------- TUNNEL
+
+async function tunnel ()
+{
+	// Find project
+	const project = await findProject()
+	const projectName = project.config.project
+
+	let startingLine = printLoaderLine(`Starting local tunnel ...`);
+
+	// Generate name
+	const computerHostname = require('os').hostname();
+	let computerHash = require('crypto').createHash('md5').update(computerHostname).digest('hex')
+	computerHash = computerHash.substr(16, 8);
+	let subdomain = projectName + '--' + computerHash
+
+	this._localTunnelInstance = await require('localtunnel')({
+		port: 80,
+		subdomain
+	})
+
+	this._localTunnelInstance.on('close', () => {
+		startingLine
+		? startingLine(`Unable to open local tunnel`, 'error')
+		: nicePrint('{o}Local tunnel closed.');
+		this._localTunnelInstance = null;
+	})
+
+	await delay(.1);
+	const { url } = this._localTunnelInstance
+	startingLine(`Local tunnel opened at {b/u}${url}`)
+	startingLine = null;
+
+	const qrTerminal = require('qrcode-terminal');
+	qrTerminal.setErrorLevel('Q');
+	qrTerminal.generate(url, { small: true });
+}
+
 // ----------------------------------------------------------------------------- EXPORTS API
 
 module.exports = {
@@ -170,4 +204,5 @@ module.exports = {
 	open,
 	exec,
 	sync,
+	tunnel
 }
