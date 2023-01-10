@@ -107,6 +107,7 @@ async function chimeraPush ( options )
 			if ( sendVolumes && localPart.indexOf('./') === 0 )
 				options.paths.push( localPart )
 			// Get kept volumes
+			// TODO : Be compatible with default CHIMERA_KEEP:-. ( the -. is crashing it here )
 			if ( localPart.indexOf('${'+_chimeraKeepVariableName) !== -1 )
 				options.keep.push(
 					leading(localPart.split('}')[1], false, '/')

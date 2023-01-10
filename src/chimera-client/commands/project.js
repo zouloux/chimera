@@ -1,7 +1,4 @@
 const path = require( "path" );
-const { onProcessKilled } = require( "@solid-js/cli" );
-const { createTask } = require( "@solid-js/cli" );
-const { delay } = require( "@solid-js/core" );
 const { printLoaderLine } = require( "@solid-js/cli" );
 const { execAsync } = require( "@solid-js/cli" );
 const { findProject } = require( "./_common" );
@@ -46,9 +43,11 @@ async function start ( cliArguments, cliOptions )
 
 	await stop(cliArguments, cliOptions, project)
 
+	// Build
 	let loaderLine = printLoaderLine(`Building ${project.config.project}`)
 	try {
-		await execAsync(`docker-compose -f ${dockerFile} build`, 0, { cwd })
+		const command = `docker-compose -f ${dockerFile} build`
+		require("child_process").execSync( command, { stdio: 'inherit', cwd })
 	} catch (e) {
 		loaderLine(`Error while building docker project`)
 		console.error( e )
@@ -56,28 +55,19 @@ async function start ( cliArguments, cliOptions )
 	}
 	loaderLine(`Docker project built`);
 
-	// Exec async but do not await to listen process kills
-	execAsync(`docker-compose -f ${dockerFile} up --no-build --abort-on-container-exit --force-recreate`, 3, {
-		cwd,
-		detached: false
-	}).catch( e => {} ) // catch to avoid node uncaught promise errors
+	// Pull silently
+	require("child_process").execSync(`docker-compose pull`, { stdio: 'inherit', cwd })
 
-	onProcessKilled( async () => {
-		await delay(1)
-		const closeLine = printLoaderLine(`Stopping  ${project.config.project}`)
-		try {
-			await execAsync(`docker-compose -f ${dockerFile} down --remove-orphans`, 0, { cwd })
-		}
-		catch ( e ) {
-			console.error(e);
-		}
-		closeLine(`${project.config.project} stopped.`);
-	})
-
-	if ( cliOptions.open || cliOptions.O ) {
-		await delay(2)
+	// Open browser if needed
+	if ( cliOptions.open || cliOptions.O )
 		await open()
+
+	// Start project in sync and sigkill
+	const command = `docker-compose -f ${dockerFile} up --no-build --abort-on-container-exit --force-recreate --remove-orphans`
+	try {
+		require("child_process").execSync( command, { stdio: 'inherit', cwd, killSignal: "SIGKILL" })
 	}
+	catch (e) {}
 }
 
 // ----------------------------------------------------------------------------- STOP
@@ -155,71 +145,15 @@ async function exec ( cliArguments )
 	const project = await findProject()
 	const projectName = project.config.project
 	const containerID = `project_${project.config.project}`
-
-	// Exec with a command which was in argument
-	if ( 1 in cliArguments ) {
-		const command = `docker exec -i ${containerID} ${cliArguments[1]}`
-		await execAsync(command, 3, {
-			env: process.env,
-			cwd: process.cwd(),
-		});
-		process.exit();
-	}
-
-	// Connect to a piped shell
-	const connectTask = createTask(`Connecting to ${projectName}`)
-	const command = `docker exec -i ${containerID} /bin/bash`
-	const childProcess = require('child_process').exec(command, {
-		env: process.env,
-		cwd: process.cwd(),
-		//shell: '/bin/bash'
-	});
-
-	// Pipe stdout
-	let hadErrorWhileLoading = false
-	childProcess.stdout.on('data', data => {
-		process.stdout.write(
-			// Style command invite
-			data.indexOf('> ') === 0
-			? nicePrint(`{b/w}${data}`, {
-				output: 'return', newLine: false
-			})
-			// Regular data
-			: data
-		)
-	})
-
-	// Detect connection errors
-	childProcess.stderr.once('data', data => { hadErrorWhileLoading = data });
-
-	// Show a command input invite (> /root :)
-	const printShellInvite = () => childProcess.stdin.write(`echo "\> $(pwd) $ "\n`)
-
-	// Pipe stdin to child process and show invite after each command
-	process.stdin.resume();
-	process.stdin.on('data', data => {
-		childProcess.stdin.write(data)
-		if (data.toString() === 'exit\n')
-			process.exit();
-		printShellInvite();
-	});
-
-	// Wait connection and detect errors
-	await delay(.2)
-	if (hadErrorWhileLoading) {
-		connectTask.error(`Unable to connect to ${projectName}`)
-		console.error(nicePrint(`{b/r}${hadErrorWhileLoading}`, {output: 'return'}))
-		process.exit(2)
-	}
-
-	// Pipe errors
-	childProcess.stderr.on('data', data => {
-		process.stderr.write(nicePrint(`{b/r}${data}`, { output: 'return' }))
-	});
-
-	// Connection success
-	connectTask.success(`Connected to ${projectName}`)
-	printShellInvite();
+	const command = (
+		// Exec with a command which was in argument
+		1 in cliArguments
+		? `docker exec -i ${containerID} ${cliArguments[1]}`
+		// Open a new shell
+		: `docker exec -it ${containerID} /bin/bash`
+	)
+	require("child_process").execSync( command, { stdio: 'inherit' })
+	nicePrint(`{d}Closed {b/w}${projectName}{/d} shell.`)
 }
 
 // ----------------------------------------------------------------------------- SYNC
