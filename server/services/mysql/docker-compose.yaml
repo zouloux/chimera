@@ -25,7 +25,7 @@ services:
       - "chimera"
     environment:
       PMA_HOST: "maria"
-      UPLOAD_LIMIT: 20M
+      UPLOAD_LIMIT: 300M
 
 networks:
   chimera:

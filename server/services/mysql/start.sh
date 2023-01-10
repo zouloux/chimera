@@ -27,5 +27,5 @@ if [ ! -f .env ]; then
 fi
 
 echo "PhpMyAdmin will be available here : "
-echo "→ ${bold}https://phpmyadmin.chimera.localhost${normal}"
+echo "→ ${bold}http://phpmyadmin.localhost${normal}"
 echo ""
