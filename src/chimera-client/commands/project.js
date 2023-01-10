@@ -55,9 +55,6 @@ async function start ( cliArguments, cliOptions )
 	}
 	loaderLine(`Docker project built`);
 
-	// Pull silently
-	require("child_process").execSync(`docker-compose pull`, { stdio: 'inherit', cwd })
-
 	// Open browser if needed
 	if ( cliOptions.open || cliOptions.O )
 		await open()
