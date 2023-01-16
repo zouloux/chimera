@@ -120,7 +120,7 @@ async function open ( ask = true )
 		const r = await askList("Which endpoint to open ?", [
 			`[SSL]		${endpoints[0]}`,
 			`[HTTP]	${endpoints[1]}`,
-			'[DEFAULT]	${endpoints[2]}',
+			`[DEFAULT]	${endpoints[2]}`,
 		])
 		index = r[0]
 	}
