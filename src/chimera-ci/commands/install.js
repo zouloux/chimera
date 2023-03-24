@@ -60,8 +60,13 @@ async function chimeraInstall ( options )
 			taskUpdater.setProgress( i, _filesToInstall.length )
 			taskUpdater.setAfterText( file )
 			try {
+				const curlCommand = (
+					options.githubToken
+					? `curl -X GET -H "Authorization: token ${options.githubToken}" ${_filesRoot}${file} -o ${remoteFilePath}`
+					: `curl ${_filesRoot}${file} -o ${remoteFilePath}`
+				)
 				const commands = [
-					`curl ${_filesRoot}${file} -o ${remoteFilePath}`,
+					curlCommand,
 					`chmod +x ${remoteFilePath}`
 				]
 				remoteCommand = buildSSHCommand(commands.join(';'), options)
