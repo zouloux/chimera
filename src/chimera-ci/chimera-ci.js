@@ -108,6 +108,8 @@ CLICommands.add('push', async (cliArguments, cliOptions, commandName) => {
 		options.noDelete = !cliOptions['delete']
 	if ( cliOptions['project-root'] )
 		options.projectRoot = cliOptions['project-root']
+	if ( cliOptions['sym-links'] === false )
+		options.noSymLinks = !cliOptions['sym-links']
 
 	if ( cliOptions['after-script'] )
 		multiInject(options, 'afterScripts', cliOptions['after-script'])

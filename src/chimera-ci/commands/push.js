@@ -303,7 +303,9 @@ async function chimeraPush ( options )
 	// ---- INSTALL CONTAINER
 	if (!options.dryRun) {
 		// Build command
-		const createSymLinks = options.noDocker ? 'symlinks' : 'skip'
+		let createSymLinks = options.noDocker ? 'symlinks' : 'skip'
+		if ( options.noSymLinks )
+			createSymLinks = 'skip'
 		const installArgumentList = [
 			//    1            2                3
 			projectTrunk, projectKeep, relativeChimeraKeep,
