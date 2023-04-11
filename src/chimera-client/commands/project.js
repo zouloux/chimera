@@ -1,5 +1,5 @@
 const path = require( "path" );
-const { printLoaderLine, askList } = require( "@solid-js/cli" );
+const { printLoaderLine, askList, onProcessWillExit, onProcessKilled } = require( "@solid-js/cli" );
 const { execAsync } = require( "@solid-js/cli" );
 const { findProject } = require( "./_common" );
 const { nicePrint } = require( "@solid-js/cli" );
@@ -165,13 +165,14 @@ async function tunnel ()
 	const project = await findProject()
 	const projectName = project.config.project
 
-	let startingLine = printLoaderLine(`Starting local tunnel ...`);
 
 	// Generate name
 	const computerHostname = require('os').hostname();
 	let computerHash = require('crypto').createHash('md5').update(computerHostname).digest('hex')
 	computerHash = computerHash.substr(16, 8);
 	let subdomain = projectName + '--' + computerHash
+
+	let startingLine = printLoaderLine(`Starting local tunnel at ${subdomain} ...`);
 
 	this._localTunnelInstance = await require('localtunnel')({
 		port: 80,
@@ -193,6 +194,13 @@ async function tunnel ()
 	const qrTerminal = require('qrcode-terminal');
 	qrTerminal.setErrorLevel('Q');
 	qrTerminal.generate(url, { small: true });
+
+	onProcessKilled(async () => {
+		console.log("\nClosing local tunnel ...")
+		await delay(.5)
+		this._localTunnelInstance.close();
+		await delay(.5)
+	})
 }
 
 // ----------------------------------------------------------------------------- EXPORTS API

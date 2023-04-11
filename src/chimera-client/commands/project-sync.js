@@ -492,9 +492,9 @@ async function projectSync ()
 		// Ask for password
 		let scpPassword = ''
 		if ( readFromEnv.files.usePassword )
-			scpPassword = readScpPassword ?? (await askInput(`${readFrom} password :`, { notEmpty: true }))
+			scpPassword = readScpPassword === "" ? (await askInput(`${readFrom} password :`, { notEmpty: true })) : readScpPassword
 		else if ( writeToEnv.files.usePassword )
-			scpPassword = writeScpPassword ?? (await askInput(`${writeTo} password :`, { notEmpty: true }))
+			scpPassword = writeScpPassword === "" ?  (await askInput(`${writeTo} password :`, { notEmpty: true })) : writeScpPassword
 
 		for ( const syncPath of project.config.sync )
 		{
